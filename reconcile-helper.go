@@ -1028,19 +1028,19 @@ func CopyPersistentVolumeClaim(from, to *corev1.PersistentVolumeClaim, log logr.
 	}
 	to.Labels = from.Labels
 
-	for k, v := range to.Annotations {
-		if from.Annotations[k] != v && k != "pv.kubernetes.io/bind-completed" {
-			log.V(1).Info("reconciling PersistentVolumeClaim due to annotation change")
-			log.V(2).Info("difference in PersistentVolumeClaim annotations", "wanted", from.Annotations, "existing", to.Annotations)
-			requireUpdate = true
-		}
-	}
-	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
-		log.V(1).Info("reconciling PersistentVolumeClaim due to annotation change")
-		log.V(2).Info("difference in PersistentVolumeClaim annotations", "wanted", from.Annotations, "existing", to.Annotations)
-		requireUpdate = true
-	}
-	to.Annotations = from.Annotations
+	// for k, v := range to.Annotations {
+	// 	if from.Annotations[k] != v {
+	// 		log.V(1).Info("reconciling PersistentVolumeClaim due to annotation change")
+	// 		log.V(2).Info("difference in PersistentVolumeClaim annotations", "wanted", from.Annotations, "existing", to.Annotations)
+	// 		requireUpdate = true
+	// 	}
+	// }
+	// if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+	// 	log.V(1).Info("reconciling PersistentVolumeClaim due to annotation change")
+	// 	log.V(2).Info("difference in PersistentVolumeClaim annotations", "wanted", from.Annotations, "existing", to.Annotations)
+	// 	requireUpdate = true
+	// }
+	// to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec.Resources.Requests, from.Spec.Resources.Requests) {
 		log.V(1).Info("reconciling PersistentVolumeClaim due to resource requests change")
