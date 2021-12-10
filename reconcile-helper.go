@@ -1013,12 +1013,12 @@ func CopyPersistentVolumeClaim(from, to *corev1.PersistentVolumeClaim, log logr.
 	}
 	to.Annotations = from.Annotations
 
-	if !reflect.DeepEqual(to.Spec, from.Spec) {
-		log.V(1).Info("reconciling PersistentVolumeClaim due to spec change")
-		log.V(2).Info("difference in PersistentVolumeClaim spec", "wanted", from.Spec, "existing", to.Spec)
+	if !reflect.DeepEqual(to.Spec.Resources.Requests, from.Spec.Resources.Requests) {
+		log.V(1).Info("reconciling PersistentVolumeClaim due to resource requests")
+		log.V(2).Info("difference in PersistentVolumeClaim spec", "wanted", from.Spec.Resources.Requests, "existing", to.Spec.Resources.Requests)
 		requireUpdate = true
 	}
-	to.Spec = from.Spec
+	to.Spec.Resources.Requests = from.Spec.Resources.Requests
 
 	return requireUpdate
 }
