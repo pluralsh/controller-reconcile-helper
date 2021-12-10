@@ -1043,8 +1043,8 @@ func CopyPersistentVolumeClaim(from, to *corev1.PersistentVolumeClaim, log logr.
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec.Resources.Requests, from.Spec.Resources.Requests) {
-		log.V(1).Info("reconciling PersistentVolumeClaim due to resource requests")
-		log.V(2).Info("difference in PersistentVolumeClaim spec", "wanted", from.Spec.Resources.Requests, "existing", to.Spec.Resources.Requests)
+		log.V(1).Info("reconciling PersistentVolumeClaim due to resource requests change")
+		log.V(2).Info("difference in PersistentVolumeClaim resource requests", "wanted", from.Spec.Resources.Requests, "existing", to.Spec.Resources.Requests)
 		requireUpdate = true
 	}
 	to.Spec.Resources.Requests = from.Spec.Resources.Requests
@@ -1084,7 +1084,7 @@ func CopyPostgresql(from, to *postgresv1.Postgresql, log logr.Logger) bool {
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
-		log.V(1).Info("reconciling PostgreSQL Database due to resource requests")
+		log.V(1).Info("reconciling PostgreSQL Database due to spec change")
 		log.V(2).Info("difference in PostgreSQL Database spec", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
