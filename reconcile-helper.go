@@ -79,6 +79,34 @@ func StatefulSet(ctx context.Context, r client.Client, statefulset *appsv1.State
 	return nil
 }
 
+// PersistentVolumeClaim reconciles a k8s pvc object.
+func PersistentVolumeClaim(ctx context.Context, r client.Client, pvc *corev1.PersistentVolumeClaim, log logr.Logger) error {
+	foundPVC := &corev1.PersistentVolumeClaim{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: pvc.Name, Namespace: pvc.Namespace}, foundPVC); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating PersistentVolumeClaim", "namespace", pvc.Namespace, "name", pvc.Name)
+			if err := r.Create(ctx, pvc); err != nil {
+				log.Error(err, "Unable to create PersistentVolumeClaim")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting PersistentVolumeClaim")
+			return err
+		}
+	}
+	if !justCreated && CopyPersistentVolumeClaim(pvc, foundPVC, log) {
+		log.Info("Updating PersistentVolumeClaim", "namespace", pvc.Namespace, "name", pvc.Name)
+		if err := r.Update(ctx, foundPVC); err != nil {
+			log.Error(err, "Unable to update PersistentVolumeClaim")
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Service reconciles a k8s service object.
 func Service(ctx context.Context, r client.Client, service *corev1.Service, log logr.Logger) error {
 	foundService := &corev1.Service{}
@@ -950,6 +978,47 @@ func CopyNamespace(from, to *corev1.Namespace, log logr.Logger) bool {
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
+
+	return requireUpdate
+}
+
+// CopyPersistentVolumeClaim copies the owned fields from one PersistentVolumeClaim to another
+func CopyPersistentVolumeClaim(from, to *corev1.PersistentVolumeClaim, log logr.Logger) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			log.V(1).Info("reconciling PersistentVolumeClaim due to label change")
+			log.V(2).Info("difference in PersistentVolumeClaim labels", "wanted", from.Labels, "existing", to.Labels)
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling PersistentVolumeClaim due to label change")
+		log.V(2).Info("difference in PersistentVolumeClaim labels", "wanted", from.Labels, "existing", to.Labels)
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling PersistentVolumeClaim due to annotation change")
+			log.V(2).Info("difference in PersistentVolumeClaim annotations", "wanted", from.Annotations, "existing", to.Annotations)
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling PersistentVolumeClaim due to annotation change")
+		log.V(2).Info("difference in PersistentVolumeClaim annotations", "wanted", from.Annotations, "existing", to.Annotations)
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling PersistentVolumeClaim due to spec change")
+		log.V(2).Info("difference in PersistentVolumeClaim spec", "wanted", from.Spec, "existing", to.Spec)
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
 
 	return requireUpdate
 }
