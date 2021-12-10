@@ -8,6 +8,15 @@ require (
 )
 
 require (
+	github.com/kr/text v0.2.0 // indirect
+	github.com/motomux/pretty v0.0.0-20161209205251-b2aad2c9a95d // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/zalando/postgres-operator v1.7.1 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	k8s.io/apiextensions-apiserver v0.22.3 // indirect
+)
+
+require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
@@ -35,7 +44,7 @@ require (
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023 // indirect
+	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
 	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

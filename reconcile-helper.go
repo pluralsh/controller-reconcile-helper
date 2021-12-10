@@ -12,6 +12,7 @@ import (
 	istioNetworkingClient "istio.io/client-go/pkg/apis/networking/v1beta1"
 	// istioSecurity "istio.io/api/security/v1beta1"
 	platformv1alpha1 "github.com/pluralsh/kubeflow-controller/apis/platform/v1alpha1"
+	postgresv1 "github.com/zalando/postgres-operator/pkg/apis/acid.zalan.do/v1"
 	istioSecurityClient "istio.io/client-go/pkg/apis/security/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -394,6 +395,34 @@ func SubnamespaceAnchor(ctx context.Context, r client.Client, userEnv *hncv1alph
 		log.Info("Updating SubnamespaceAnchor", "namespace", userEnv.Namespace, "name", userEnv.Name)
 		if err := r.Update(ctx, foundUserEnv); err != nil {
 			log.Error(err, "Unable to update SubnamespaceAnchor")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Postgresql reconciles a Postgresql Database object.
+func Postgresql(ctx context.Context, r client.Client, postgres *postgresv1.Postgresql, log logr.Logger) error {
+	foundPostgresql := &postgresv1.Postgresql{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: postgres.Name, Namespace: postgres.Namespace}, foundPostgresql); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating PostgreSQL Database", "namespace", postgres.Namespace, "name", postgres.Name)
+			if err = r.Create(ctx, postgres); err != nil {
+				log.Error(err, "Unable to create PostgreSQL Database")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting PostgreSQL Database")
+			return err
+		}
+	}
+	if !justCreated && CopyPostgresql(postgres, foundPostgresql, log) {
+		log.Info("Updating PostgreSQL Database", "namespace", postgres.Namespace, "name", postgres.Name)
+		if err := r.Update(ctx, foundPostgresql); err != nil {
+			log.Error(err, "Unable to update PostgreSQL Database")
 			return err
 		}
 	}
@@ -1019,6 +1048,47 @@ func CopyPersistentVolumeClaim(from, to *corev1.PersistentVolumeClaim, log logr.
 		requireUpdate = true
 	}
 	to.Spec.Resources.Requests = from.Spec.Resources.Requests
+
+	return requireUpdate
+}
+
+// CopyPostgresql copies the owned fields from one Postgres instance to another
+func CopyPostgresql(from, to *postgresv1.Postgresql, log logr.Logger) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			log.V(1).Info("reconciling PostgreSQL Database due to label change")
+			log.V(2).Info("difference in PostgreSQL Database labels", "wanted", from.Labels, "existing", to.Labels)
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling PostgreSQL Database due to label change")
+		log.V(2).Info("difference in PostgreSQL Database labels", "wanted", from.Labels, "existing", to.Labels)
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling PostgreSQL Database due to annotation change")
+			log.V(2).Info("difference in PostgreSQL Database annotations", "wanted", from.Annotations, "existing", to.Annotations)
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling PostgreSQL Database due to annotation change")
+		log.V(2).Info("difference in PostgreSQL Database annotations", "wanted", from.Annotations, "existing", to.Annotations)
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling PostgreSQL Database due to resource requests")
+		log.V(2).Info("difference in PostgreSQL Database spec", "wanted", from.Spec, "existing", to.Spec)
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
 
 	return requireUpdate
 }
