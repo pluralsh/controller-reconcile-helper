@@ -225,7 +225,7 @@ func DestinationRule(ctx context.Context, r client.Client, destinationRule *isti
 			return err
 		}
 	}
-	if !justCreated && CopyDestinationRule(destinationRule, foundDestinationRule) {
+	if !justCreated && CopyDestinationRule(destinationRule, foundDestinationRule, log) {
 		log.Info("Updating Istio DestinationRule\n", "namespace", destinationRule.Namespace, "name", destinationRule.Name)
 		if err := r.Update(ctx, foundDestinationRule); err != nil {
 			log.Error(err, "Unable to update Istio DestinationRule")
@@ -312,6 +312,34 @@ func ServiceAccount(ctx context.Context, r client.Client, serviceAccount *corev1
 		log.Info("Updating ServiceAccount", "namespace", serviceAccount.Namespace, "name", serviceAccount.Name)
 		if err := r.Update(ctx, foundServiceAccount); err != nil {
 			log.Error(err, "Unable to update ServiceAccount")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ConfigMap reconciles a ConfigMap object.
+func ConfigMap(ctx context.Context, r client.Client, configMap *corev1.ConfigMap, log logr.Logger) error {
+	foundConfigMap := &corev1.ConfigMap{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: configMap.Name, Namespace: configMap.Namespace}, foundConfigMap); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating ConfigMap", "namespace", configMap.Namespace, "name", configMap.Name)
+			if err = r.Create(ctx, configMap); err != nil {
+				log.Error(err, "Unable to create ConfigMap")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting ConfigMap")
+			return err
+		}
+	}
+	if !justCreated && CopyConfigMap(configMap, foundConfigMap, log) {
+		log.Info("Updating ConfigMap\n", "namespace", configMap.Namespace, "name", configMap.Name)
+		if err := r.Update(ctx, foundConfigMap); err != nil {
+			log.Error(err, "Unable to update ConfigMap")
 			return err
 		}
 	}
@@ -476,7 +504,7 @@ func XPlaneIAMPolicy(ctx context.Context, r client.Client, iamPolicy *crossplane
 			return err
 		}
 	}
-	if !justCreated && CopyXPlaneIAMPolicy(iamPolicy, foundIAMPolicy) {
+	if !justCreated && CopyXPlaneIAMPolicy(iamPolicy, foundIAMPolicy, log) {
 		log.Info("Updating CrossPlane IAM Policy\n", "namespace", iamPolicy.Namespace, "name", iamPolicy.Name)
 		if err := r.Update(ctx, foundIAMPolicy); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM Policy")
@@ -504,7 +532,7 @@ func XPlaneIAMRole(ctx context.Context, r client.Client, iamRole *crossplaneAWSI
 			return err
 		}
 	}
-	if !justCreated && CopyXPlaneIAMRole(iamRole, foundIAMRole) {
+	if !justCreated && CopyXPlaneIAMRole(iamRole, foundIAMRole, log) {
 		log.Info("Updating CrossPlane IAM Role\n", "namespace", iamRole.Namespace, "name", iamRole.Name)
 		if err := r.Update(ctx, foundIAMRole); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM Role")
@@ -532,7 +560,7 @@ func XPlaneIAMUser(ctx context.Context, r client.Client, iamUser *crossplaneAWSI
 			return err
 		}
 	}
-	if !justCreated && CopyXPlaneIAMUser(iamUser, foundIAMUser) {
+	if !justCreated && CopyXPlaneIAMUser(iamUser, foundIAMUser, log) {
 		log.Info("Updating CrossPlane IAM User\n", "namespace", iamUser.Namespace, "name", iamUser.Name)
 		if err := r.Update(ctx, foundIAMUser); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM User")
@@ -560,7 +588,7 @@ func XPlaneIAMRolePolicyAttachement(ctx context.Context, r client.Client, iamRol
 			return err
 		}
 	}
-	if !justCreated && CopyXPlaneIAMRolePolicyAttachement(iamRolePolicyAttachement, foundRolePolicyAttachement) {
+	if !justCreated && CopyXPlaneIAMRolePolicyAttachement(iamRolePolicyAttachement, foundRolePolicyAttachement, log) {
 		log.Info("Updating CrossPlane IAM Role Policy Attachement\n", "namespace", iamRolePolicyAttachement.Namespace, "name", iamRolePolicyAttachement.Name)
 		if err := r.Update(ctx, foundRolePolicyAttachement); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM Role Policy Attachement")
@@ -588,7 +616,7 @@ func XPlaneIAMUserPolicyAttachement(ctx context.Context, r client.Client, iamUse
 			return err
 		}
 	}
-	if !justCreated && CopyXPlaneIAMUserPolicyAttachement(iamUserPolicyAttachement, foundUserPolicyAttachement) {
+	if !justCreated && CopyXPlaneIAMUserPolicyAttachement(iamUserPolicyAttachement, foundUserPolicyAttachement, log) {
 		log.Info("Updating CrossPlane IAM User Policy Attachement\n", "namespace", iamUserPolicyAttachement.Namespace, "name", iamUserPolicyAttachement.Name)
 		if err := r.Update(ctx, foundUserPolicyAttachement); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM User Policy Attachement")
@@ -616,7 +644,7 @@ func XPlaneIAMAccessKey(ctx context.Context, r client.Client, iamAccessKey *cros
 			return err
 		}
 	}
-	if !justCreated && CopyXPlaneIAMAccessKey(iamAccessKey, foundIAMAccessKey) {
+	if !justCreated && CopyXPlaneIAMAccessKey(iamAccessKey, foundIAMAccessKey, log) {
 		log.Info("Updating CrossPlane IAM Access Key\n", "namespace", iamAccessKey.Namespace, "name", iamAccessKey.Name)
 		if err := r.Update(ctx, foundIAMAccessKey); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM Access Key")
@@ -987,29 +1015,39 @@ func CopyAuthorizationPolicy(from, to *istioSecurityClient.AuthorizationPolicy, 
 }
 
 // CopyDestinationRule copies the owned fields from one DestinationRule to another
-func CopyDestinationRule(from, to *istioNetworkingClient.DestinationRule) bool {
+func CopyDestinationRule(from, to *istioNetworkingClient.DestinationRule, log logr.Logger) bool {
 	requireUpdate := false
 	for k, v := range to.Labels {
 		if from.Labels[k] != v {
+			log.V(1).Info("reconciling DestinationRule due to label change")
+			log.V(2).Info("difference in DestinationRule labels", "wanted", from.Labels, "existing", to.Labels)
 			requireUpdate = true
 		}
 	}
 	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling DestinationRule due to label change")
+		log.V(2).Info("difference in DestinationRule labels", "wanted", from.Labels, "existing", to.Labels)
 		requireUpdate = true
 	}
 	to.Labels = from.Labels
 
 	for k, v := range to.Annotations {
 		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling DestinationRule due to annotation change")
+			log.V(2).Info("difference in DestinationRule annotations", "wanted", from.Annotations, "existing", to.Annotations)
 			requireUpdate = true
 		}
 	}
 	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling DestinationRule due to annotation change")
+		log.V(2).Info("difference in DestinationRule annotations", "wanted", from.Annotations, "existing", to.Annotations)
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling DestinationRule due to Spec change")
+		log.V(2).Info("difference in DestinationRule Specs", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
@@ -1111,6 +1149,55 @@ func CopyServiceAccount(from, to *corev1.ServiceAccount, log logr.Logger) bool {
 		requireUpdate = true
 	}
 	to.AutomountServiceAccountToken = from.AutomountServiceAccountToken
+
+	return requireUpdate
+}
+
+// CopyConfigMap copies the owned fields from one Service Account to another
+func CopyConfigMap(from, to *corev1.ConfigMap, log logr.Logger) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			log.V(1).Info("reconciling ConfigMap due to label change")
+			log.V(2).Info("difference in ConfigMap labels", "wanted", from.Labels, "existing", to.Labels)
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling ConfigMap due to label change")
+		log.V(2).Info("difference in ConfigMap labels", "wanted", from.Labels, "existing", to.Labels)
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling ConfigMap due to annotation change")
+			log.V(2).Info("difference in ConfigMap annotations", "wanted", from.Annotations, "existing", to.Annotations)
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling ConfigMap due to annotation change")
+		log.V(2).Info("difference in ConfigMap annotations", "wanted", from.Annotations, "existing", to.Annotations)
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	// Don't copy the entire Spec, because we this will lead to unnecessary reconciles
+	if !reflect.DeepEqual(to.Data, from.Data) {
+		log.V(1).Info("reconciling ConfigMap due to Data change")
+		log.V(2).Info("difference in ConfigMap Data", "wanted", from.Data, "existing", to.Data)
+		requireUpdate = true
+	}
+	to.Data = from.Data
+
+	if !reflect.DeepEqual(to.BinaryData, from.BinaryData) {
+		log.V(1).Info("reconciling ConfigMap due to BinaryData change")
+		log.V(2).Info("difference in ConfigMap BinaryData", "wanted", from.BinaryData, "existing", to.BinaryData)
+		requireUpdate = true
+	}
+	to.BinaryData = from.BinaryData
 
 	return requireUpdate
 }
@@ -1397,29 +1484,39 @@ func CopySubnamespaceAnchor(from, to *hncv1alpha2.SubnamespaceAnchor, log logr.L
 }
 
 // CopyXPlaneIAMPolicy copies the owned fields from one CrossPlane IAM Policy to another
-func CopyXPlaneIAMPolicy(from, to *crossplaneAWSIdentityv1alpha1.IAMPolicy) bool {
+func CopyXPlaneIAMPolicy(from, to *crossplaneAWSIdentityv1alpha1.IAMPolicy, log logr.Logger) bool {
 	requireUpdate := false
 	for k, v := range to.Labels {
 		if from.Labels[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMPolicy due to label change")
+			log.V(2).Info("difference in XPlaneIAMPolicy labels", "wanted", from.Labels, "existing", to.Labels)
 			requireUpdate = true
 		}
 	}
 	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMPolicy due to label change")
+		log.V(2).Info("difference in XPlaneIAMPolicy labels", "wanted", from.Labels, "existing", to.Labels)
 		requireUpdate = true
 	}
 	to.Labels = from.Labels
 
 	for k, v := range to.Annotations {
 		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMPolicy due to annotation change")
+			log.V(2).Info("difference in XPlaneIAMPolicy annotations", "wanted", from.Annotations, "existing", to.Annotations)
 			requireUpdate = true
 		}
 	}
 	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMPolicy due to annotation change")
+		log.V(2).Info("difference in XPlaneIAMPolicy annotations", "wanted", from.Annotations, "existing", to.Annotations)
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling XPlaneIAMPolicy due to Spec change")
+		log.V(2).Info("difference in XPlaneIAMPolicy Specs", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
@@ -1428,29 +1525,39 @@ func CopyXPlaneIAMPolicy(from, to *crossplaneAWSIdentityv1alpha1.IAMPolicy) bool
 }
 
 // CopyXPlaneIAMRole copies the owned fields from one CrossPlane IAM Role to another
-func CopyXPlaneIAMRole(from, to *crossplaneAWSIdentityv1beta1.IAMRole) bool {
+func CopyXPlaneIAMRole(from, to *crossplaneAWSIdentityv1beta1.IAMRole, log logr.Logger) bool {
 	requireUpdate := false
 	for k, v := range to.Labels {
 		if from.Labels[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMRole due to label change")
+			log.V(2).Info("difference in XPlaneIAMRole labels", "wanted", from.Labels, "existing", to.Labels)
 			requireUpdate = true
 		}
 	}
 	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMRole due to label change")
+		log.V(2).Info("difference in XPlaneIAMRole labels", "wanted", from.Labels, "existing", to.Labels)
 		requireUpdate = true
 	}
 	to.Labels = from.Labels
 
 	for k, v := range to.Annotations {
 		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMRole due to annotation change")
+			log.V(2).Info("difference in XPlaneIAMRole annotations", "wanted", from.Annotations, "existing", to.Annotations)
 			requireUpdate = true
 		}
 	}
 	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMRole due to annotation change")
+		log.V(2).Info("difference in XPlaneIAMRole annotations", "wanted", from.Annotations, "existing", to.Annotations)
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling XPlaneIAMRole due to Spec change")
+		log.V(2).Info("difference in XPlaneIAMRole Specs", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
@@ -1459,29 +1566,39 @@ func CopyXPlaneIAMRole(from, to *crossplaneAWSIdentityv1beta1.IAMRole) bool {
 }
 
 // CopyXPlaneIAMUser copies the owned fields from one CrossPlane IAM User to another
-func CopyXPlaneIAMUser(from, to *crossplaneAWSIdentityv1alpha1.IAMUser) bool {
+func CopyXPlaneIAMUser(from, to *crossplaneAWSIdentityv1alpha1.IAMUser, log logr.Logger) bool {
 	requireUpdate := false
 	for k, v := range to.Labels {
 		if from.Labels[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMUser due to label change")
+			log.V(2).Info("difference in XPlaneIAMUser labels", "wanted", from.Labels, "existing", to.Labels)
 			requireUpdate = true
 		}
 	}
 	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMUser due to label change")
+		log.V(2).Info("difference in XPlaneIAMUser labels", "wanted", from.Labels, "existing", to.Labels)
 		requireUpdate = true
 	}
 	to.Labels = from.Labels
 
 	for k, v := range to.Annotations {
 		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMUser due to annotation change")
+			log.V(2).Info("difference in XPlaneIAMUser annotations", "wanted", from.Annotations, "existing", to.Annotations)
 			requireUpdate = true
 		}
 	}
 	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMUser due to annotation change")
+		log.V(2).Info("difference in XPlaneIAMUser annotations", "wanted", from.Annotations, "existing", to.Annotations)
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling XPlaneIAMUser due to Spec change")
+		log.V(2).Info("difference in XPlaneIAMUser Specs", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
@@ -1490,29 +1607,39 @@ func CopyXPlaneIAMUser(from, to *crossplaneAWSIdentityv1alpha1.IAMUser) bool {
 }
 
 // CopyXPlaneIAMRolePolicyAttachement copies the owned fields from one CrossPlane IAM User Policy Attachement to another
-func CopyXPlaneIAMRolePolicyAttachement(from, to *crossplaneAWSIdentityv1beta1.IAMRolePolicyAttachment) bool {
+func CopyXPlaneIAMRolePolicyAttachement(from, to *crossplaneAWSIdentityv1beta1.IAMRolePolicyAttachment, log logr.Logger) bool {
 	requireUpdate := false
 	for k, v := range to.Labels {
 		if from.Labels[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMRolePolicyAttachement due to label change")
+			log.V(2).Info("difference in XPlaneIAMRolePolicyAttachement labels", "wanted", from.Labels, "existing", to.Labels)
 			requireUpdate = true
 		}
 	}
 	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMRolePolicyAttachement due to label change")
+		log.V(2).Info("difference in XPlaneIAMRolePolicyAttachement labels", "wanted", from.Labels, "existing", to.Labels)
 		requireUpdate = true
 	}
 	to.Labels = from.Labels
 
 	for k, v := range to.Annotations {
 		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMRolePolicyAttachement due to annotation change")
+			log.V(2).Info("difference in XPlaneIAMRolePolicyAttachement annotations", "wanted", from.Annotations, "existing", to.Annotations)
 			requireUpdate = true
 		}
 	}
 	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMRolePolicyAttachement due to annotation change")
+		log.V(2).Info("difference in XPlaneIAMRolePolicyAttachement annotations", "wanted", from.Annotations, "existing", to.Annotations)
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling XPlaneIAMRolePolicyAttachement due to Spec change")
+		log.V(2).Info("difference in XPlaneIAMRolePolicyAttachement Specs", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
@@ -1521,29 +1648,39 @@ func CopyXPlaneIAMRolePolicyAttachement(from, to *crossplaneAWSIdentityv1beta1.I
 }
 
 // CopyXPlaneIAMUserPolicyAttachement copies the owned fields from one CrossPlane IAM User Policy Attachement to another
-func CopyXPlaneIAMUserPolicyAttachement(from, to *crossplaneAWSIdentityv1alpha1.IAMUserPolicyAttachment) bool {
+func CopyXPlaneIAMUserPolicyAttachement(from, to *crossplaneAWSIdentityv1alpha1.IAMUserPolicyAttachment, log logr.Logger) bool {
 	requireUpdate := false
 	for k, v := range to.Labels {
 		if from.Labels[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMUserPolicyAttachement due to label change")
+			log.V(2).Info("difference in XPlaneIAMUserPolicyAttachement labels", "wanted", from.Labels, "existing", to.Labels)
 			requireUpdate = true
 		}
 	}
 	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMUserPolicyAttachement due to label change")
+		log.V(2).Info("difference in XPlaneIAMUserPolicyAttachement labels", "wanted", from.Labels, "existing", to.Labels)
 		requireUpdate = true
 	}
 	to.Labels = from.Labels
 
 	for k, v := range to.Annotations {
 		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMUserPolicyAttachement due to annotation change")
+			log.V(2).Info("difference in XPlaneIAMUserPolicyAttachement annotations", "wanted", from.Annotations, "existing", to.Annotations)
 			requireUpdate = true
 		}
 	}
 	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMUserPolicyAttachement due to annotation change")
+		log.V(2).Info("difference in XPlaneIAMUserPolicyAttachement annotations", "wanted", from.Annotations, "existing", to.Annotations)
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling XPlaneIAMUserPolicyAttachement due to Spec change")
+		log.V(2).Info("difference in XPlaneIAMUserPolicyAttachement Specs", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
@@ -1552,39 +1689,53 @@ func CopyXPlaneIAMUserPolicyAttachement(from, to *crossplaneAWSIdentityv1alpha1.
 }
 
 // CopyXPlaneIAMAccessKey copies the owned fields from one CrossPlane IAM Access Key to another
-func CopyXPlaneIAMAccessKey(from, to *crossplaneAWSIdentityv1alpha1.IAMAccessKey) bool {
+func CopyXPlaneIAMAccessKey(from, to *crossplaneAWSIdentityv1alpha1.IAMAccessKey, log logr.Logger) bool {
 	requireUpdate := false
 	for k, v := range to.Labels {
 		if from.Labels[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMAccessKey due to label change")
+			log.V(2).Info("difference in XPlaneIAMAccessKey labels", "wanted", from.Labels, "existing", to.Labels)
 			requireUpdate = true
 		}
 	}
 	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMAccessKey due to label change")
+		log.V(2).Info("difference in XPlaneIAMAccessKey labels", "wanted", from.Labels, "existing", to.Labels)
 		requireUpdate = true
 	}
 	to.Labels = from.Labels
 
 	for k, v := range to.Annotations {
 		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling XPlaneIAMAccessKey due to annotation change")
+			log.V(2).Info("difference in XPlaneIAMAccessKey annotations", "wanted", from.Annotations, "existing", to.Annotations)
 			requireUpdate = true
 		}
 	}
 	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling XPlaneIAMAccessKey due to annotation change")
+		log.V(2).Info("difference in XPlaneIAMAccessKey annotations", "wanted", from.Annotations, "existing", to.Annotations)
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec.DeletionPolicy, from.Spec.DeletionPolicy) {
+		log.V(1).Info("reconciling XPlaneIAMAccessKey due to DeletionPolicy change")
+		log.V(2).Info("difference in XPlaneIAMAccessKey DeletionPolicies", "wanted", from.Spec.DeletionPolicy, "existing", to.Spec.DeletionPolicy)
 		requireUpdate = true
 	}
 	to.Spec.DeletionPolicy = from.Spec.DeletionPolicy
 
 	if !reflect.DeepEqual(to.Spec.ForProvider, from.Spec.ForProvider) {
+		log.V(1).Info("reconciling XPlaneIAMAccessKey due to ForProvider change")
+		log.V(2).Info("difference in XPlaneIAMAccessKey ForProviders", "wanted", from.Spec.ForProvider, "existing", to.Spec.ForProvider)
 		requireUpdate = true
 	}
 	to.Spec.ForProvider = from.Spec.ForProvider
 
 	if !reflect.DeepEqual(to.Spec.ProviderConfigReference, from.Spec.ProviderConfigReference) {
+		log.V(1).Info("reconciling XPlaneIAMAccessKey due to ProviderConfigReference change")
+		log.V(2).Info("difference in XPlaneIAMAccessKey ProviderConfigReferences", "wanted", from.Spec.ProviderConfigReference, "existing", to.Spec.ProviderConfigReference)
 		requireUpdate = true
 	}
 	to.Spec.ProviderConfigReference = from.Spec.ProviderConfigReference
