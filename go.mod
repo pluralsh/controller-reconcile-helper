@@ -8,10 +8,13 @@ require (
 )
 
 require (
+	github.com/crossplane/crossplane-runtime v0.15.1-0.20210930095326-d5661210733b // indirect
+	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/motomux/pretty v0.0.0-20161209205251-b2aad2c9a95d // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/zalando/postgres-operator v1.7.1 // indirect
+	github.com/spf13/afero v1.6.0 // indirect
+	github.com/zalando/postgres-operator v1.7.1
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	k8s.io/apiextensions-apiserver v0.22.3 // indirect
 )
@@ -37,6 +40,7 @@ require (
 )
 
 require (
+	github.com/crossplane/provider-aws v0.21.2
 	github.com/go-logr/logr v0.4.0
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect

@@ -11,6 +11,8 @@ import (
 	// istioNetworking "istio.io/api/networking/v1beta1"
 	istioNetworkingClient "istio.io/client-go/pkg/apis/networking/v1beta1"
 	// istioSecurity "istio.io/api/security/v1beta1"
+	crossplaneAWSIdentityv1alpha1 "github.com/crossplane/provider-aws/apis/identity/v1alpha1"
+	crossplaneAWSIdentityv1beta1 "github.com/crossplane/provider-aws/apis/identity/v1beta1"
 	platformv1alpha1 "github.com/pluralsh/kubeflow-controller/apis/platform/v1alpha1"
 	postgresv1 "github.com/zalando/postgres-operator/pkg/apis/acid.zalan.do/v1"
 	istioSecurityClient "istio.io/client-go/pkg/apis/security/v1beta1"
@@ -423,6 +425,174 @@ func Postgresql(ctx context.Context, r client.Client, postgres *postgresv1.Postg
 		log.Info("Updating PostgreSQL Database", "namespace", postgres.Namespace, "name", postgres.Name)
 		if err := r.Update(ctx, foundPostgresql); err != nil {
 			log.Error(err, "Unable to update PostgreSQL Database")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// XPlaneIAMPolicy reconciles a CrossPlane IAM Policy object.
+func XPlaneIAMPolicy(ctx context.Context, r client.Client, iamPolicy *crossplaneAWSIdentityv1alpha1.IAMPolicy, log logr.Logger) error {
+	foundIAMPolicy := &crossplaneAWSIdentityv1alpha1.IAMPolicy{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: iamPolicy.Name, Namespace: iamPolicy.Namespace}, foundIAMPolicy); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating CrossPlane IAM Policy", "namespace", iamPolicy.Namespace, "name", iamPolicy.Name)
+			if err = r.Create(ctx, iamPolicy); err != nil {
+				log.Error(err, "Unable to create CrossPlane IAM Policy")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting CrossPlane IAM Policy")
+			return err
+		}
+	}
+	if !justCreated && CopyXPlaneIAMPolicy(iamPolicy, foundIAMPolicy) {
+		log.Info("Updating CrossPlane IAM Policy\n", "namespace", iamPolicy.Namespace, "name", iamPolicy.Name)
+		if err := r.Update(ctx, foundIAMPolicy); err != nil {
+			log.Error(err, "Unable to update CrossPlane IAM Policy")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// XPlaneIAMRole reconciles a CrossPlane IAM Role object.
+func XPlaneIAMRole(ctx context.Context, r client.Client, iamRole *crossplaneAWSIdentityv1beta1.IAMRole, log logr.Logger) error {
+	foundIAMRole := &crossplaneAWSIdentityv1beta1.IAMRole{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: iamRole.Name, Namespace: iamRole.Namespace}, foundIAMRole); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating CrossPlane IAM Role", "namespace", iamRole.Namespace, "name", iamRole.Name)
+			if err = r.Create(ctx, iamRole); err != nil {
+				log.Error(err, "Unable to create CrossPlane IAM Role")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting CrossPlane IAM Role")
+			return err
+		}
+	}
+	if !justCreated && CopyXPlaneIAMRole(iamRole, foundIAMRole) {
+		log.Info("Updating CrossPlane IAM Role\n", "namespace", iamRole.Namespace, "name", iamRole.Name)
+		if err := r.Update(ctx, foundIAMRole); err != nil {
+			log.Error(err, "Unable to update CrossPlane IAM Role")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// XPlaneIAMUser reconciles a CrossPlane IAM User object.
+func XPlaneIAMUser(ctx context.Context, r client.Client, iamUser *crossplaneAWSIdentityv1alpha1.IAMUser, log logr.Logger) error {
+	foundIAMUser := &crossplaneAWSIdentityv1alpha1.IAMUser{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: iamUser.Name, Namespace: iamUser.Namespace}, foundIAMUser); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating CrossPlane IAM User", "namespace", iamUser.Namespace, "name", iamUser.Name)
+			if err = r.Create(ctx, iamUser); err != nil {
+				log.Error(err, "Unable to create CrossPlane IAM User")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting CrossPlane IAM User")
+			return err
+		}
+	}
+	if !justCreated && CopyXPlaneIAMUser(iamUser, foundIAMUser) {
+		log.Info("Updating CrossPlane IAM User\n", "namespace", iamUser.Namespace, "name", iamUser.Name)
+		if err := r.Update(ctx, foundIAMUser); err != nil {
+			log.Error(err, "Unable to update CrossPlane IAM User")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// XPlaneIAMRolePolicyAttachement reconciles a CrossPlane IAM Role Policy Attachement object.
+func XPlaneIAMRolePolicyAttachement(ctx context.Context, r client.Client, iamRolePolicyAttachement *crossplaneAWSIdentityv1beta1.IAMRolePolicyAttachment, log logr.Logger) error {
+	foundRolePolicyAttachement := &crossplaneAWSIdentityv1beta1.IAMRolePolicyAttachment{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: iamRolePolicyAttachement.Name, Namespace: iamRolePolicyAttachement.Namespace}, foundRolePolicyAttachement); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating CrossPlane IAM Role Policy Attachement", "namespace", iamRolePolicyAttachement.Namespace, "name", iamRolePolicyAttachement.Name)
+			if err = r.Create(ctx, iamRolePolicyAttachement); err != nil {
+				log.Error(err, "Unable to create CrossPlane IAM Role Policy Attachement")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting CrossPlane IAM Role Policy Attachement")
+			return err
+		}
+	}
+	if !justCreated && CopyXPlaneIAMRolePolicyAttachement(iamRolePolicyAttachement, foundRolePolicyAttachement) {
+		log.Info("Updating CrossPlane IAM Role Policy Attachement\n", "namespace", iamRolePolicyAttachement.Namespace, "name", iamRolePolicyAttachement.Name)
+		if err := r.Update(ctx, foundRolePolicyAttachement); err != nil {
+			log.Error(err, "Unable to update CrossPlane IAM Role Policy Attachement")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// XPlaneIAMUserPolicyAttachement reconciles a CrossPlane IAM User Policy Attachement object.
+func XPlaneIAMUserPolicyAttachement(ctx context.Context, r client.Client, iamUserPolicyAttachement *crossplaneAWSIdentityv1alpha1.IAMUserPolicyAttachment, log logr.Logger) error {
+	foundUserPolicyAttachement := &crossplaneAWSIdentityv1alpha1.IAMUserPolicyAttachment{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: iamUserPolicyAttachement.Name, Namespace: iamUserPolicyAttachement.Namespace}, foundUserPolicyAttachement); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating CrossPlane IAM User Policy Attachement", "namespace", iamUserPolicyAttachement.Namespace, "name", iamUserPolicyAttachement.Name)
+			if err = r.Create(ctx, iamUserPolicyAttachement); err != nil {
+				log.Error(err, "Unable to create CrossPlane IAM User Policy Attachement")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting CrossPlane IAM Policy Attachement")
+			return err
+		}
+	}
+	if !justCreated && CopyXPlaneIAMUserPolicyAttachement(iamUserPolicyAttachement, foundUserPolicyAttachement) {
+		log.Info("Updating CrossPlane IAM User Policy Attachement\n", "namespace", iamUserPolicyAttachement.Namespace, "name", iamUserPolicyAttachement.Name)
+		if err := r.Update(ctx, foundUserPolicyAttachement); err != nil {
+			log.Error(err, "Unable to update CrossPlane IAM User Policy Attachement")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// XPlaneIAMAccessKey reconciles a CrossPlane IAM Access Key.
+func XPlaneIAMAccessKey(ctx context.Context, r client.Client, iamAccessKey *crossplaneAWSIdentityv1alpha1.IAMAccessKey, log logr.Logger) error {
+	foundIAMAccessKey := &crossplaneAWSIdentityv1alpha1.IAMAccessKey{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: iamAccessKey.Name, Namespace: iamAccessKey.Namespace}, foundIAMAccessKey); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating CrossPlane IAM Access Key", "namespace", iamAccessKey.Namespace, "name", iamAccessKey.Name)
+			if err = r.Create(ctx, iamAccessKey); err != nil {
+				log.Error(err, "Unable to create CrossPlane IAM Access Key")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting CrossPlane IAM Access Key")
+			return err
+		}
+	}
+	if !justCreated && CopyXPlaneIAMAccessKey(iamAccessKey, foundIAMAccessKey) {
+		log.Info("Updating CrossPlane IAM Access Key\n", "namespace", iamAccessKey.Namespace, "name", iamAccessKey.Name)
+		if err := r.Update(ctx, foundIAMAccessKey); err != nil {
+			log.Error(err, "Unable to update CrossPlane IAM Access Key")
 			return err
 		}
 	}
@@ -1164,6 +1334,202 @@ func CopySubnamespaceAnchor(from, to *hncv1alpha2.SubnamespaceAnchor, log logr.L
 		requireUpdate = true
 	}
 	to.Annotations = from.Annotations
+
+	return requireUpdate
+}
+
+// CopyXPlaneIAMPolicy copies the owned fields from one CrossPlane IAM Policy to another
+func CopyXPlaneIAMPolicy(from, to *crossplaneAWSIdentityv1alpha1.IAMPolicy) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyXPlaneIAMRole copies the owned fields from one CrossPlane IAM Role to another
+func CopyXPlaneIAMRole(from, to *crossplaneAWSIdentityv1beta1.IAMRole) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyXPlaneIAMUser copies the owned fields from one CrossPlane IAM User to another
+func CopyXPlaneIAMUser(from, to *crossplaneAWSIdentityv1alpha1.IAMUser) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyXPlaneIAMRolePolicyAttachement copies the owned fields from one CrossPlane IAM User Policy Attachement to another
+func CopyXPlaneIAMRolePolicyAttachement(from, to *crossplaneAWSIdentityv1beta1.IAMRolePolicyAttachment) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyXPlaneIAMUserPolicyAttachement copies the owned fields from one CrossPlane IAM User Policy Attachement to another
+func CopyXPlaneIAMUserPolicyAttachement(from, to *crossplaneAWSIdentityv1alpha1.IAMUserPolicyAttachment) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyXPlaneIAMAccessKey copies the owned fields from one CrossPlane IAM Access Key to another
+func CopyXPlaneIAMAccessKey(from, to *crossplaneAWSIdentityv1alpha1.IAMAccessKey) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec.DeletionPolicy, from.Spec.DeletionPolicy) {
+		requireUpdate = true
+	}
+	to.Spec.DeletionPolicy = from.Spec.DeletionPolicy
+
+	if !reflect.DeepEqual(to.Spec.ForProvider, from.Spec.ForProvider) {
+		requireUpdate = true
+	}
+	to.Spec.ForProvider = from.Spec.ForProvider
+
+	if !reflect.DeepEqual(to.Spec.ProviderConfigReference, from.Spec.ProviderConfigReference) {
+		requireUpdate = true
+	}
+	to.Spec.ProviderConfigReference = from.Spec.ProviderConfigReference
 
 	return requireUpdate
 }
