@@ -208,6 +208,33 @@ func Namespace(ctx context.Context, r client.Client, namespace *corev1.Namespace
 	return nil
 }
 
+// DestinationRule reconciles an Istio DestinationRule object.
+func DestinationRule(ctx context.Context, r client.Client, destinationRule *istioNetworkingClient.DestinationRule, log logr.Logger) error {
+	foundDestinationRule := &istioNetworkingClient.DestinationRule{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: destinationRule.Name, Namespace: destinationRule.Namespace}, foundDestinationRule); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating Istio DestinationRule", "namespace", destinationRule.Namespace, "name", destinationRule.Name)
+			if err = r.Create(ctx, destinationRule); err != nil {
+				log.Error(err, "Unable to create Istio DestinationRule")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting Istio DestinationRule")
+			return err
+		}
+	}
+	if !justCreated && CopyDestinationRule(destinationRule, foundDestinationRule) {
+		log.Info("Updating Istio DestinationRule\n", "namespace", destinationRule.Namespace, "name", destinationRule.Name)
+		if err := r.Update(ctx, foundDestinationRule); err != nil {
+			log.Error(err, "Unable to update Istio DestinationRule")
+			return err
+		}
+	}
+	return nil
+}
+
 // RequestAuthentication reconciles an Istio RequestAuthentication object.
 func RequestAuthentication(ctx context.Context, r client.Client, requestAuth *istioSecurityClient.RequestAuthentication, log logr.Logger) error {
 	foundRequestAuth := &istioSecurityClient.RequestAuthentication{}
@@ -955,6 +982,37 @@ func CopyAuthorizationPolicy(from, to *istioSecurityClient.AuthorizationPolicy, 
 		requireUpdate = true
 	}
 	to.Spec.Rules = from.Spec.Rules
+
+	return requireUpdate
+}
+
+// CopyDestinationRule copies the owned fields from one DestinationRule to another
+func CopyDestinationRule(from, to *istioNetworkingClient.DestinationRule) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
 
 	return requireUpdate
 }
