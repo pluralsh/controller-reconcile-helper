@@ -835,19 +835,19 @@ func CopyDeploymentFields(from, to *appsv1.Deployment, log logr.Logger) bool {
 	}
 	to.Labels = from.Labels
 
-	for k, v := range to.Annotations {
-		if from.Annotations[k] != v {
-			log.V(1).Info("reconciling Deployment due to annotation change")
-			log.V(2).Info("difference in Deployment annotations", "wanted", from.Annotations, "existing", to.Annotations)
-			requireUpdate = true
-		}
-	}
-	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
-		log.V(1).Info("reconciling Deployment due to annotation change")
-		log.V(2).Info("difference in Deployment annotations", "wanted", from.Annotations, "existing", to.Annotations)
-		requireUpdate = true
-	}
-	to.Annotations = from.Annotations
+	// for k, v := range to.Annotations {
+	// 	if from.Annotations[k] != v {
+	// 		log.V(1).Info("reconciling Deployment due to annotation change")
+	// 		log.V(2).Info("difference in Deployment annotations", "wanted", from.Annotations, "existing", to.Annotations)
+	// 		requireUpdate = true
+	// 	}
+	// }
+	// if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+	// 	log.V(1).Info("reconciling Deployment due to annotation change")
+	// 	log.V(2).Info("difference in Deployment annotations", "wanted", from.Annotations, "existing", to.Annotations)
+	// 	requireUpdate = true
+	// }
+	// to.Annotations = from.Annotations
 
 	if !reflect.DeepEqual(to.Spec.Replicas, from.Spec.Replicas) {
 		log.V(1).Info("reconciling Deployment due to replica change")
