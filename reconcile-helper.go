@@ -12,6 +12,7 @@ import (
 	istioNetworkingClient "istio.io/client-go/pkg/apis/networking/v1beta1"
 	// istioSecurity "istio.io/api/security/v1beta1"
 	// crossplaneAWSIdentityv1alpha1 "github.com/crossplane/provider-aws/apis/identity/v1alpha1"
+	ackIAM "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	crossplaneAWSIdentityv1beta1 "github.com/crossplane/provider-aws/apis/iam/v1beta1"
 	platformv1alpha1 "github.com/pluralsh/kubeflow-controller/apis/platform/v1alpha1"
 	postgresv1 "github.com/zalando/postgres-operator/pkg/apis/acid.zalan.do/v1"
@@ -226,7 +227,7 @@ func DestinationRule(ctx context.Context, r client.Client, destinationRule *isti
 		}
 	}
 	if !justCreated && CopyDestinationRule(destinationRule, foundDestinationRule, log) {
-		log.Info("Updating Istio DestinationRule\n", "namespace", destinationRule.Namespace, "name", destinationRule.Name)
+		log.Info("Updating Istio DestinationRule", "namespace", destinationRule.Namespace, "name", destinationRule.Name)
 		if err := r.Update(ctx, foundDestinationRule); err != nil {
 			log.Error(err, "Unable to update Istio DestinationRule")
 			return err
@@ -337,7 +338,7 @@ func ConfigMap(ctx context.Context, r client.Client, configMap *corev1.ConfigMap
 		}
 	}
 	if !justCreated && CopyConfigMap(configMap, foundConfigMap, log) {
-		log.Info("Updating ConfigMap\n", "namespace", configMap.Namespace, "name", configMap.Name)
+		log.Info("Updating ConfigMap", "namespace", configMap.Namespace, "name", configMap.Name)
 		if err := r.Update(ctx, foundConfigMap); err != nil {
 			log.Error(err, "Unable to update ConfigMap")
 			return err
@@ -505,7 +506,7 @@ func XPlaneIAMPolicy(ctx context.Context, r client.Client, iamPolicy *crossplane
 		}
 	}
 	if !justCreated && CopyXPlaneIAMPolicy(iamPolicy, foundIAMPolicy, log) {
-		log.Info("Updating CrossPlane IAM Policy\n", "namespace", iamPolicy.Namespace, "name", iamPolicy.Name)
+		log.Info("Updating CrossPlane IAM Policy", "namespace", iamPolicy.Namespace, "name", iamPolicy.Name)
 		if err := r.Update(ctx, foundIAMPolicy); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM Policy")
 			return err
@@ -533,7 +534,7 @@ func XPlaneIAMRole(ctx context.Context, r client.Client, iamRole *crossplaneAWSI
 		}
 	}
 	if !justCreated && CopyXPlaneIAMRole(iamRole, foundIAMRole, log) {
-		log.Info("Updating CrossPlane IAM Role\n", "namespace", iamRole.Namespace, "name", iamRole.Name)
+		log.Info("Updating CrossPlane IAM Role", "namespace", iamRole.Namespace, "name", iamRole.Name)
 		if err := r.Update(ctx, foundIAMRole); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM Role")
 			return err
@@ -561,7 +562,7 @@ func XPlaneIAMUser(ctx context.Context, r client.Client, iamUser *crossplaneAWSI
 		}
 	}
 	if !justCreated && CopyXPlaneIAMUser(iamUser, foundIAMUser, log) {
-		log.Info("Updating CrossPlane IAM User\n", "namespace", iamUser.Namespace, "name", iamUser.Name)
+		log.Info("Updating CrossPlane IAM User", "namespace", iamUser.Namespace, "name", iamUser.Name)
 		if err := r.Update(ctx, foundIAMUser); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM User")
 			return err
@@ -589,7 +590,7 @@ func XPlaneIAMRolePolicyAttachement(ctx context.Context, r client.Client, iamRol
 		}
 	}
 	if !justCreated && CopyXPlaneIAMRolePolicyAttachement(iamRolePolicyAttachement, foundRolePolicyAttachement, log) {
-		log.Info("Updating CrossPlane IAM Role Policy Attachement\n", "namespace", iamRolePolicyAttachement.Namespace, "name", iamRolePolicyAttachement.Name)
+		log.Info("Updating CrossPlane IAM Role Policy Attachement", "namespace", iamRolePolicyAttachement.Namespace, "name", iamRolePolicyAttachement.Name)
 		if err := r.Update(ctx, foundRolePolicyAttachement); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM Role Policy Attachement")
 			return err
@@ -617,7 +618,7 @@ func XPlaneIAMUserPolicyAttachement(ctx context.Context, r client.Client, iamUse
 		}
 	}
 	if !justCreated && CopyXPlaneIAMUserPolicyAttachement(iamUserPolicyAttachement, foundUserPolicyAttachement, log) {
-		log.Info("Updating CrossPlane IAM User Policy Attachement\n", "namespace", iamUserPolicyAttachement.Namespace, "name", iamUserPolicyAttachement.Name)
+		log.Info("Updating CrossPlane IAM User Policy Attachement", "namespace", iamUserPolicyAttachement.Namespace, "name", iamUserPolicyAttachement.Name)
 		if err := r.Update(ctx, foundUserPolicyAttachement); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM User Policy Attachement")
 			return err
@@ -645,9 +646,65 @@ func XPlaneIAMAccessKey(ctx context.Context, r client.Client, iamAccessKey *cros
 		}
 	}
 	if !justCreated && CopyXPlaneIAMAccessKey(iamAccessKey, foundIAMAccessKey, log) {
-		log.Info("Updating CrossPlane IAM Access Key\n", "namespace", iamAccessKey.Namespace, "name", iamAccessKey.Name)
+		log.Info("Updating CrossPlane IAM Access Key", "namespace", iamAccessKey.Namespace, "name", iamAccessKey.Name)
 		if err := r.Update(ctx, foundIAMAccessKey); err != nil {
 			log.Error(err, "Unable to update CrossPlane IAM Access Key")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ACKIAMPolicy reconciles a ACK IAM Policy object.
+func ACKIAMPolicy(ctx context.Context, r client.Client, iamPolicy *ackIAM.Policy, log logr.Logger) error {
+	foundIAMPolicy := &ackIAM.Policy{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: iamPolicy.Name, Namespace: iamPolicy.Namespace}, foundIAMPolicy); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating ACK IAM Policy", "namespace", iamPolicy.Namespace, "name", iamPolicy.Name)
+			if err = r.Create(ctx, iamPolicy); err != nil {
+				log.Error(err, "Unable to create ACK IAM Policy")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting ACK IAM Policy")
+			return err
+		}
+	}
+	if !justCreated && CopyACKIAMPolicy(iamPolicy, foundIAMPolicy, log) {
+		log.Info("Updating ACK IAM Policy", "namespace", iamPolicy.Namespace, "name", iamPolicy.Name)
+		if err := r.Update(ctx, foundIAMPolicy); err != nil {
+			log.Error(err, "Unable to update ACK IAM Policy")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// ACKIAMRole reconciles a ACK IAM Role object.
+func ACKIAMRole(ctx context.Context, r client.Client, iamRole *ackIAM.Role, log logr.Logger) error {
+	foundIAMRole := &ackIAM.Role{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: iamRole.Name, Namespace: iamRole.Namespace}, foundIAMRole); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating ACK IAM Role", "namespace", iamRole.Namespace, "name", iamRole.Name)
+			if err = r.Create(ctx, iamRole); err != nil {
+				log.Error(err, "Unable to create ACK IAM Role")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting ACK IAM Role")
+			return err
+		}
+	}
+	if !justCreated && CopyACKIAMRole(iamRole, foundIAMRole, log) {
+		log.Info("Updating ACK IAM Role", "namespace", iamRole.Namespace, "name", iamRole.Name)
+		if err := r.Update(ctx, foundIAMRole); err != nil {
+			log.Error(err, "Unable to update ACK IAM Role")
 			return err
 		}
 	}
@@ -1852,6 +1909,88 @@ func CopyXPlaneIAMAccessKey(from, to *crossplaneAWSIdentityv1beta1.AccessKey, lo
 		requireUpdate = true
 	}
 	to.Spec.ProviderConfigReference = from.Spec.ProviderConfigReference
+
+	return requireUpdate
+}
+
+// CopyACKIAMPolicy copies the owned fields from one ACK IAM Policy to another
+func CopyACKIAMPolicy(from, to *ackIAM.Policy, log logr.Logger) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			log.V(1).Info("reconciling ACKIAMPolicy due to label change")
+			log.V(2).Info("difference in ACKIAMPolicy labels", "wanted", from.Labels, "existing", to.Labels)
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling ACKIAMPolicy due to label change")
+		log.V(2).Info("difference in ACKIAMPolicy labels", "wanted", from.Labels, "existing", to.Labels)
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling ACKIAMPolicy due to annotation change")
+			log.V(2).Info("difference in ACKIAMPolicy annotations", "wanted", from.Annotations, "existing", to.Annotations)
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling ACKIAMPolicy due to annotation change")
+		log.V(2).Info("difference in ACKIAMPolicy annotations", "wanted", from.Annotations, "existing", to.Annotations)
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling ACKIAMPolicy due to Spec change")
+		log.V(2).Info("difference in ACKIAMPolicy Specs", "wanted", from.Spec, "existing", to.Spec)
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyACKIAMRole copies the owned fields from one ACK IAM Role to another
+func CopyACKIAMRole(from, to *ackIAM.Role, log logr.Logger) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			log.V(1).Info("reconciling ACKIAMRole due to label change")
+			log.V(2).Info("difference in ACKIAMRole labels", "wanted", from.Labels, "existing", to.Labels)
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling ACKIAMRole due to label change")
+		log.V(2).Info("difference in ACKIAMRole labels", "wanted", from.Labels, "existing", to.Labels)
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling ACKIAMRole due to annotation change")
+			log.V(2).Info("difference in ACKIAMRole annotations", "wanted", from.Annotations, "existing", to.Annotations)
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling ACKIAMRole due to annotation change")
+		log.V(2).Info("difference in ACKIAMRole annotations", "wanted", from.Annotations, "existing", to.Annotations)
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling ACKIAMRole due to Spec change")
+		log.V(2).Info("difference in ACKIAMRole Specs", "wanted", from.Spec, "existing", to.Spec)
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
 
 	return requireUpdate
 }
