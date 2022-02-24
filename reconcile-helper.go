@@ -746,7 +746,7 @@ func CopyStatefulSetFields(from, to *appsv1.StatefulSet, log logr.Logger) bool {
 	}
 	to.Annotations = from.Annotations
 
-	if !reflect.DeepEqual(to.Spec.Replicas, to.Spec.Replicas) {
+	if !reflect.DeepEqual(to.Spec.Replicas, from.Spec.Replicas) {
 		log.V(1).Info("reconciling StatefulSet due to replica change")
 		log.V(2).Info("difference in StatefulSet replicas", "wanted", from.Spec.Replicas, "existing", to.Spec.Replicas)
 		requireUpdate = true
