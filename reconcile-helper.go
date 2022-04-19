@@ -9,14 +9,16 @@ import (
 	"github.com/go-logr/logr"
 
 	// istioNetworking "istio.io/api/networking/v1beta1"
+	istioNetworkingClientv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	istioNetworkingClient "istio.io/client-go/pkg/apis/networking/v1beta1"
+	istioSecurityClient "istio.io/client-go/pkg/apis/security/v1beta1"
+
 	// istioSecurity "istio.io/api/security/v1beta1"
 	// crossplaneAWSIdentityv1alpha1 "github.com/crossplane/provider-aws/apis/identity/v1alpha1"
 	ackIAM "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	crossplaneAWSIdentityv1beta1 "github.com/crossplane/provider-aws/apis/iam/v1beta1"
 	platformv1alpha1 "github.com/pluralsh/kubeflow-controller/apis/platform/v1alpha1"
 	postgresv1 "github.com/zalando/postgres-operator/pkg/apis/acid.zalan.do/v1"
-	istioSecurityClient "istio.io/client-go/pkg/apis/security/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkv1 "k8s.io/api/networking/v1"
@@ -705,6 +707,62 @@ func ACKIAMRole(ctx context.Context, r client.Client, iamRole *ackIAM.Role, log 
 		log.Info("Updating ACK IAM Role", "namespace", iamRole.Namespace, "name", iamRole.Name)
 		if err := r.Update(ctx, foundIAMRole); err != nil {
 			log.Error(err, "Unable to update ACK IAM Role")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// PeerAuthentication reconciles an Istio PeerAuthentication object.
+func PeerAuthentication(ctx context.Context, r client.Client, peerAuthentication *istioSecurityClient.PeerAuthentication, log logr.Logger) error {
+	foundPeerAuthentication := &istioSecurityClient.PeerAuthentication{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: peerAuthentication.Name, Namespace: peerAuthentication.Namespace}, foundPeerAuthentication); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating Istio PeerAuthentication", "namespace", peerAuthentication.Namespace, "name", peerAuthentication.Name)
+			if err = r.Create(ctx, peerAuthentication); err != nil {
+				log.Error(err, "Unable to create Istio PeerAuthentication")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting Istio PeerAuthentication")
+			return err
+		}
+	}
+	if !justCreated && CopyPeerAuthentication(peerAuthentication, foundPeerAuthentication, log) {
+		log.Info("Updating Istio PeerAuthentication", "namespace", peerAuthentication.Namespace, "name", peerAuthentication.Name)
+		if err := r.Update(ctx, foundPeerAuthentication); err != nil {
+			log.Error(err, "Unable to update Istio PeerAuthentication")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// EnvoyFilter reconciles an Istio EnvoyFilter object.
+func EnvoyFilter(ctx context.Context, r client.Client, envoyFilter *istioNetworkingClientv1alpha3.EnvoyFilter, log logr.Logger) error {
+	foundEnvoyFilter := &istioNetworkingClientv1alpha3.EnvoyFilter{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: envoyFilter.Name, Namespace: envoyFilter.Namespace}, foundEnvoyFilter); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating Istio EnvoyFilter", "namespace", envoyFilter.Namespace, "name", envoyFilter.Name)
+			if err = r.Create(ctx, envoyFilter); err != nil {
+				log.Error(err, "Unable to create Istio EnvoyFilter")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting Istio EnvoyFilter")
+			return err
+		}
+	}
+	if !justCreated && CopyEnvoyFilter(envoyFilter, foundEnvoyFilter, log) {
+		log.Info("Updating Istio EnvoyFilter", "namespace", envoyFilter.Namespace, "name", envoyFilter.Name)
+		if err := r.Update(ctx, foundEnvoyFilter); err != nil {
+			log.Error(err, "Unable to update Istio EnvoyFilter")
 			return err
 		}
 	}
@@ -1988,6 +2046,88 @@ func CopyACKIAMRole(from, to *ackIAM.Role, log logr.Logger) bool {
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
 		log.V(1).Info("reconciling ACKIAMRole due to Spec change")
 		log.V(2).Info("difference in ACKIAMRole Specs", "wanted", from.Spec, "existing", to.Spec)
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyPeerAuthentication copies the owned fields from one Istio PeerAuthentication to another
+func CopyPeerAuthentication(from, to *istioSecurityClient.PeerAuthentication, log logr.Logger) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			log.V(1).Info("reconciling Istio PeerAuthentication due to label change")
+			log.V(2).Info("difference in Istio PeerAuthentication labels", "wanted", from.Labels, "existing", to.Labels)
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling Istio PeerAuthentication due to label change")
+		log.V(2).Info("difference in Istio PeerAuthentication labels", "wanted", from.Labels, "existing", to.Labels)
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling Istio PeerAuthentication due to annotation change")
+			log.V(2).Info("difference in Istio PeerAuthentication annotations", "wanted", from.Annotations, "existing", to.Annotations)
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling Istio PeerAuthentication due to annotation change")
+		log.V(2).Info("difference in Istio PeerAuthentication annotations", "wanted", from.Annotations, "existing", to.Annotations)
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling Istio PeerAuthentication due to Spec change")
+		log.V(2).Info("difference in Istio PeerAuthentication Specs", "wanted", from.Spec, "existing", to.Spec)
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyEnvoyFilter copies the owned fields from one Istio EnvoyFilter to another
+func CopyEnvoyFilter(from, to *istioNetworkingClientv1alpha3.EnvoyFilter, log logr.Logger) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			log.V(1).Info("reconciling Istio EnvoyFilter due to label change")
+			log.V(2).Info("difference in Istio EnvoyFilter labels", "wanted", from.Labels, "existing", to.Labels)
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling Istio EnvoyFilter due to label change")
+		log.V(2).Info("difference in Istio EnvoyFilter labels", "wanted", from.Labels, "existing", to.Labels)
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling Istio EnvoyFilter due to annotation change")
+			log.V(2).Info("difference in Istio EnvoyFilter annotations", "wanted", from.Annotations, "existing", to.Annotations)
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling Istio EnvoyFilter due to annotation change")
+		log.V(2).Info("difference in Istio EnvoyFilter annotations", "wanted", from.Annotations, "existing", to.Annotations)
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling Istio EnvoyFilter due to Spec change")
+		log.V(2).Info("difference in Istio EnvoyFilter Specs", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
