@@ -3,26 +3,26 @@ module github.com/pluralsh/controller-reconcile-helper
 go 1.17
 
 require (
+	github.com/aws-controllers-k8s/iam-controller v0.0.6
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	istio.io/client-go v1.13.3
 )
 
 require (
-	github.com/aws-controllers-k8s/iam-controller v0.0.6 // indirect
 	github.com/aws-controllers-k8s/runtime v0.17.0 // indirect
 	github.com/aws/aws-sdk-go v1.42.0 // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
 )
 
 require (
-	github.com/crossplane/crossplane-runtime v0.15.1-0.20210930095326-d5661210733b // indirect
+	github.com/crossplane/crossplane-runtime v0.15.1-0.20220315141414-988c9ba9c255 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/motomux/pretty v0.0.0-20161209205251-b2aad2c9a95d // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/spf13/afero v1.6.0 // indirect
+	github.com/spf13/afero v1.8.0 // indirect
 	github.com/zalando/postgres-operator v1.7.1
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa // indirect
 	k8s.io/apiextensions-apiserver v0.23.5 // indirect
 )
 
@@ -47,10 +47,10 @@ require (
 )
 
 require (
-	github.com/crossplane/provider-aws v0.22.0
+	github.com/crossplane/provider-aws v0.27.0
 	github.com/go-logr/logr v1.2.0
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
