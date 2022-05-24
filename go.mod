@@ -3,12 +3,12 @@ module github.com/pluralsh/controller-reconcile-helper
 go 1.17
 
 require (
+	github.com/aws-controllers-k8s/iam-controller v0.0.6
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	istio.io/client-go v1.13.3
 )
 
 require (
-	github.com/aws-controllers-k8s/iam-controller v0.0.6 // indirect
 	github.com/aws-controllers-k8s/runtime v0.17.0 // indirect
 	github.com/aws/aws-sdk-go v1.42.0 // indirect
 	sigs.k8s.io/json v0.0.0-20211020170558-c049b76a60c6 // indirect
@@ -53,6 +53,7 @@ require (
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/kubeflow/kubeflow/components/admission-webhook v0.0.0-20220513185335-8be0d987f765
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
