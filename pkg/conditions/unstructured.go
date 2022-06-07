@@ -16,69 +16,103 @@ limitations under the License.
 
 package conditions
 
-// import (
-// 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-// 	"k8s.io/apimachinery/pkg/runtime"
-// 	"sigs.k8s.io/controller-runtime/pkg/log"
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
 
-// 	crhelpertypes "github.com/pluralsh/controller-reconcile-helper/pkg/types"
-// 	"sigs.k8s.io/cluster-api/util"
-// )
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
-// // UnstructuredGetter return a Getter object that can read conditions from an Unstructured object.
-// // Important. This method should be used only with types implementing Cluster API conditions.
-// func UnstructuredGetter(u *unstructured.Unstructured) Getter {
-// 	return &unstructuredWrapper{Unstructured: u}
-// }
+	"github.com/pkg/errors"
+	crhelpertypes "github.com/pluralsh/controller-reconcile-helper/pkg/types"
+)
 
-// // UnstructuredSetter return a Setter object that can set conditions from an Unstructured object.
-// // Important. This method should be used only with types implementing Cluster API conditions.
-// func UnstructuredSetter(u *unstructured.Unstructured) Setter {
-// 	return &unstructuredWrapper{Unstructured: u}
-// }
+var (
+	// ErrUnstructuredFieldNotFound determines that a field
+	// in an unstructured object could not be found.
+	ErrUnstructuredFieldNotFound = fmt.Errorf("field not found")
+)
 
-// type unstructuredWrapper struct {
-// 	*unstructured.Unstructured
-// }
+// UnstructuredGetter return a Getter object that can read conditions from an Unstructured object.
+// Important. This method should be used only with types implementing Cluster API conditions.
+func UnstructuredGetter(u *unstructured.Unstructured) Getter {
+	return &unstructuredWrapper{Unstructured: u}
+}
 
-// // GetConditions returns the list of conditions from an Unstructured object.
-// //
-// // NOTE: Due to the constraints of JSON-unmarshal, this operation is to be considered best effort.
-// // In more details:
-// // - Errors during JSON-unmarshal are ignored and a empty collection list is returned.
-// // - It's not possible to detect if the object has an empty condition list or if it does not implement conditions;
-// //   in both cases the operation returns an empty slice is returned.
-// // - If the object doesn't implement conditions on under status as defined in Cluster API,
-// //   JSON-unmarshal matches incoming object keys to the keys; this can lead to to conditions values partially set.
-// func (c *unstructuredWrapper) GetConditions() crhelpertypes.Conditions {
-// 	conditions := crhelpertypes.Conditions{}
-// 	if err := util.UnstructuredUnmarshalField(c.Unstructured, &conditions, "status", "conditions"); err != nil {
-// 		return nil
-// 	}
-// 	return conditions
-// }
+// UnstructuredSetter return a Setter object that can set conditions from an Unstructured object.
+// Important. This method should be used only with types implementing Cluster API conditions.
+func UnstructuredSetter(u *unstructured.Unstructured) Setter {
+	return &unstructuredWrapper{Unstructured: u}
+}
 
-// // SetConditions set the conditions into an Unstructured object.
-// //
-// // NOTE: Due to the constraints of JSON-unmarshal, this operation is to be considered best effort.
-// // In more details:
-// // - Errors during JSON-unmarshal are ignored and a empty collection list is returned.
-// // - It's not possible to detect if the object has an empty condition list or if it does not implement conditions;
-// //   in both cases the operation returns an empty slice is returned.
-// func (c *unstructuredWrapper) SetConditions(conditions crhelpertypes.Conditions) {
-// 	v := make([]interface{}, 0, len(conditions))
-// 	for i := range conditions {
-// 		m, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&conditions[i])
-// 		if err != nil {
-// 			log.Log.Error(err, "Failed to convert Condition to unstructured map. This error shouldn't have occurred, please file an issue.", "groupVersionKind", c.GroupVersionKind(), "name", c.GetName(), "namespace", c.GetNamespace())
-// 			continue
-// 		}
-// 		v = append(v, m)
-// 	}
-// 	// unstructured.SetNestedField returns an error only if value cannot be set because one of
-// 	// the nesting levels is not a map[string]interface{}; this is not the case so the error should never happen here.
-// 	err := unstructured.SetNestedField(c.Unstructured.Object, v, "status", "conditions")
-// 	if err != nil {
-// 		log.Log.Error(err, "Failed to set Conditions on unstructured object. This error shouldn't have occurred, please file an issue.", "groupVersionKind", c.GroupVersionKind(), "name", c.GetName(), "namespace", c.GetNamespace())
-// 	}
-// }
+type unstructuredWrapper struct {
+	*unstructured.Unstructured
+}
+
+// GetConditions returns the list of conditions from an Unstructured object.
+//
+// NOTE: Due to the constraints of JSON-unmarshal, this operation is to be considered best effort.
+// In more details:
+// - Errors during JSON-unmarshal are ignored and a empty collection list is returned.
+// - It's not possible to detect if the object has an empty condition list or if it does not implement conditions;
+//   in both cases the operation returns an empty slice is returned.
+// - If the object doesn't implement conditions on under status as defined in Cluster API,
+//   JSON-unmarshal matches incoming object keys to the keys; this can lead to to conditions values partially set.
+func (c *unstructuredWrapper) GetConditions() crhelpertypes.Conditions {
+	conditions := crhelpertypes.Conditions{}
+	if err := UnstructuredUnmarshalField(c.Unstructured, &conditions, "status", "conditions"); err != nil {
+		return nil
+	}
+	return conditions
+}
+
+// SetConditions set the conditions into an Unstructured object.
+//
+// NOTE: Due to the constraints of JSON-unmarshal, this operation is to be considered best effort.
+// In more details:
+// - Errors during JSON-unmarshal are ignored and a empty collection list is returned.
+// - It's not possible to detect if the object has an empty condition list or if it does not implement conditions;
+//   in both cases the operation returns an empty slice is returned.
+func (c *unstructuredWrapper) SetConditions(conditions crhelpertypes.Conditions) {
+	v := make([]interface{}, 0, len(conditions))
+	for i := range conditions {
+		m, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&conditions[i])
+		if err != nil {
+			log.Log.Error(err, "Failed to convert Condition to unstructured map. This error shouldn't have occurred, please file an issue.", "groupVersionKind", c.GroupVersionKind(), "name", c.GetName(), "namespace", c.GetNamespace())
+			continue
+		}
+		v = append(v, m)
+	}
+	// unstructured.SetNestedField returns an error only if value cannot be set because one of
+	// the nesting levels is not a map[string]interface{}; this is not the case so the error should never happen here.
+	err := unstructured.SetNestedField(c.Unstructured.Object, v, "status", "conditions")
+	if err != nil {
+		log.Log.Error(err, "Failed to set Conditions on unstructured object. This error shouldn't have occurred, please file an issue.", "groupVersionKind", c.GroupVersionKind(), "name", c.GetName(), "namespace", c.GetNamespace())
+	}
+}
+
+// UnstructuredUnmarshalField is a wrapper around json and unstructured objects to decode and copy a specific field
+// value into an object.
+func UnstructuredUnmarshalField(obj *unstructured.Unstructured, v interface{}, fields ...string) error {
+	if obj == nil || obj.Object == nil {
+		return errors.Errorf("failed to unmarshal unstructured object: object is nil")
+	}
+
+	value, found, err := unstructured.NestedFieldNoCopy(obj.Object, fields...)
+	if err != nil {
+		return errors.Wrapf(err, "failed to retrieve field %q from %q", strings.Join(fields, "."), obj.GroupVersionKind())
+	}
+	if !found || value == nil {
+		return ErrUnstructuredFieldNotFound
+	}
+	valueBytes, err := json.Marshal(value)
+	if err != nil {
+		return errors.Wrapf(err, "failed to json-encode field %q value from %q", strings.Join(fields, "."), obj.GroupVersionKind())
+	}
+	if err := json.Unmarshal(valueBytes, v); err != nil {
+		return errors.Wrapf(err, "failed to json-decode field %q value from %q", strings.Join(fields, "."), obj.GroupVersionKind())
+	}
+	return nil
+}
