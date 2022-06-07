@@ -1164,7 +1164,7 @@ func CopyServiceFields(from, to *corev1.Service, log logr.Logger) bool {
 
 	if !reflect.DeepEqual(to.Spec.Type, from.Spec.Type) {
 		log.V(1).Info("reconciling service due to ports change")
-		log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports, "existing", to.Spec.Ports)
+		log.V(2).Info("difference in service type", "wanted", from.Spec.Type, "existing", to.Spec.Type)
 		requireUpdate = true
 	}
 	to.Spec.Type = from.Spec.Type
@@ -1176,16 +1176,22 @@ func CopyServiceFields(from, to *corev1.Service, log logr.Logger) bool {
 			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].AppProtocol, "existing", to.Spec.Ports[0].AppProtocol)
 			requireUpdate = true
 		}
+		to.Spec.Ports[0].AppProtocol = from.Spec.Ports[0].AppProtocol
+
 		if !reflect.DeepEqual(to.Spec.Ports[0].Name, from.Spec.Ports[0].Name) {
 			log.V(1).Info("reconciling service due to ports change")
 			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].Name, "existing", to.Spec.Ports[0].Name)
 			requireUpdate = true
 		}
+		to.Spec.Ports[0].Name = from.Spec.Ports[0].Name
+
 		if !reflect.DeepEqual(to.Spec.Ports[0].Port, from.Spec.Ports[0].Port) {
 			log.V(1).Info("reconciling service due to ports change")
 			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].Port, "existing", to.Spec.Ports[0].Port)
 			requireUpdate = true
 		}
+		to.Spec.Ports[0].Port = from.Spec.Ports[0].Port
+
 		if !reflect.DeepEqual(to.Spec.Ports[0].Protocol, from.Spec.Ports[0].Protocol) {
 			log.V(1).Info("reconciling service due to ports change")
 			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].Protocol, "existing", to.Spec.Ports[0].Protocol)
@@ -1196,7 +1202,7 @@ func CopyServiceFields(from, to *corev1.Service, log logr.Logger) bool {
 			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].TargetPort, "existing", to.Spec.Ports[0].TargetPort)
 			requireUpdate = true
 		}
-		to.Spec.Ports = from.Spec.Ports
+		to.Spec.Ports[0].TargetPort = from.Spec.Ports[0].TargetPort
 	} else {
 
 		if !reflect.DeepEqual(to.Spec.Ports, from.Spec.Ports) {
