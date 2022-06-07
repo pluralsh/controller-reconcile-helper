@@ -1162,12 +1162,50 @@ func CopyServiceFields(from, to *corev1.Service, log logr.Logger) bool {
 	}
 	to.Spec.Selector = from.Spec.Selector
 
-	if !reflect.DeepEqual(to.Spec.Ports, from.Spec.Ports) {
+	if !reflect.DeepEqual(to.Spec.Type, from.Spec.Type) {
 		log.V(1).Info("reconciling service due to ports change")
 		log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports, "existing", to.Spec.Ports)
 		requireUpdate = true
 	}
-	to.Spec.Ports = from.Spec.Ports
+	to.Spec.Type = from.Spec.Type
+
+	if to.Spec.Type == corev1.ServiceTypeLoadBalancer {
+
+		if !reflect.DeepEqual(to.Spec.Ports[0].AppProtocol, from.Spec.Ports[0].AppProtocol) {
+			log.V(1).Info("reconciling service due to ports change")
+			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].AppProtocol, "existing", to.Spec.Ports[0].AppProtocol)
+			requireUpdate = true
+		}
+		if !reflect.DeepEqual(to.Spec.Ports[0].Name, from.Spec.Ports[0].Name) {
+			log.V(1).Info("reconciling service due to ports change")
+			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].Name, "existing", to.Spec.Ports[0].Name)
+			requireUpdate = true
+		}
+		if !reflect.DeepEqual(to.Spec.Ports[0].Port, from.Spec.Ports[0].Port) {
+			log.V(1).Info("reconciling service due to ports change")
+			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].Port, "existing", to.Spec.Ports[0].Port)
+			requireUpdate = true
+		}
+		if !reflect.DeepEqual(to.Spec.Ports[0].Protocol, from.Spec.Ports[0].Protocol) {
+			log.V(1).Info("reconciling service due to ports change")
+			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].Protocol, "existing", to.Spec.Ports[0].Protocol)
+			requireUpdate = true
+		}
+		if !reflect.DeepEqual(to.Spec.Ports[0].TargetPort, from.Spec.Ports[0].TargetPort) {
+			log.V(1).Info("reconciling service due to ports change")
+			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports[0].TargetPort, "existing", to.Spec.Ports[0].TargetPort)
+			requireUpdate = true
+		}
+		to.Spec.Ports = from.Spec.Ports
+	} else {
+
+		if !reflect.DeepEqual(to.Spec.Ports, from.Spec.Ports) {
+			log.V(1).Info("reconciling service due to ports change")
+			log.V(2).Info("difference in service ports", "wanted", from.Spec.Ports, "existing", to.Spec.Ports)
+			requireUpdate = true
+		}
+		to.Spec.Ports = from.Spec.Ports
+	}
 
 	return requireUpdate
 }
