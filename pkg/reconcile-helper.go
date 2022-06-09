@@ -1182,13 +1182,15 @@ func CopySecretFields(from, to *corev1.Secret, log logr.Logger) bool {
 	}
 	to.Annotations = from.Annotations
 
-	// Don't copy the entire Spec, because we can't overwrite the clusterIp field
-	if !reflect.DeepEqual(to.Data, from.Data) {
-		log.V(1).Info("reconciling secret due to data change")
-		log.V(2).Info("difference in secret selector", "wanted", from.Data, "existing", to.Data)
-		requireUpdate = true
+	if to.Type != corev1.SecretTypeServiceAccountToken {
+		// Don't copy the entire Spec, because we can't overwrite the clusterIp field
+		if !reflect.DeepEqual(to.Data, from.Data) {
+			log.V(1).Info("reconciling secret due to data change")
+			log.V(2).Info("difference in secret selector", "wanted", from.Data, "existing", to.Data)
+			requireUpdate = true
+		}
+		to.Data = from.Data
 	}
-	to.Data = from.Data
 
 	return requireUpdate
 }
