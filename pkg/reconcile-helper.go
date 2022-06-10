@@ -18,6 +18,7 @@ import (
 	ackIAM "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	crossplaneAWSIdentityv1beta1 "github.com/crossplane/provider-aws/apis/iam/v1beta1"
 	kfPodDefault "github.com/kubeflow/kubeflow/components/admission-webhook/pkg/apis/settings/v1alpha1"
+	identityv1alpha1 "github.com/pluralsh/kubeflow-controller/apis/identity/v1alpha1"
 	platformv1alpha1 "github.com/pluralsh/kubeflow-controller/apis/platform/v1alpha1"
 	postgresv1 "github.com/zalando/postgres-operator/pkg/apis/acid.zalan.do/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -456,6 +457,34 @@ func KubeflowEnvironment(ctx context.Context, r client.Client, environment *plat
 		log.Info("Updating KubeflowEnvironmentg", "namespace", environment.Namespace, "name", environment.Name)
 		if err := r.Update(ctx, foundEnvironment); err != nil {
 			log.Error(err, "Unable to update KubeflowEnvironment")
+			return err
+		}
+	}
+
+	return nil
+}
+
+// KubeflowGroup reconciles a Kubeflow Group object.
+func KubeflowGroup(ctx context.Context, r client.Client, group *identityv1alpha1.Group, log logr.Logger) error {
+	foundGroup := &identityv1alpha1.Group{}
+	justCreated := false
+	if err := r.Get(ctx, types.NamespacedName{Name: group.Name, Namespace: group.Namespace}, foundGroup); err != nil {
+		if apierrs.IsNotFound(err) {
+			log.Info("Creating KubeflowGroup", "namespace", group.Namespace, "name", group.Name)
+			if err = r.Create(ctx, group); err != nil {
+				log.Error(err, "Unable to create KubeflowGroup")
+				return err
+			}
+			justCreated = true
+		} else {
+			log.Error(err, "Error getting KubeflowGroup")
+			return err
+		}
+	}
+	if !justCreated && CopyKubeflowGroup(group, foundGroup, log) {
+		log.Info("Updating KubeflowGroup", "namespace", group.Namespace, "name", group.Name)
+		if err := r.Update(ctx, foundGroup); err != nil {
+			log.Error(err, "Unable to update KubeflowGroup")
 			return err
 		}
 	}
@@ -1774,6 +1803,47 @@ func CopyPostgresql(from, to *postgresv1.Postgresql, log logr.Logger) bool {
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
 		log.V(1).Info("reconciling PostgreSQL Database due to spec change")
 		log.V(2).Info("difference in PostgreSQL Database spec", "wanted", from.Spec, "existing", to.Spec)
+		requireUpdate = true
+	}
+	to.Spec = from.Spec
+
+	return requireUpdate
+}
+
+// CopyKubeflowGroup copies the owned fields from one Kubeflow Group to another
+func CopyKubeflowGroup(from, to *identityv1alpha1.Group, log logr.Logger) bool {
+	requireUpdate := false
+	for k, v := range to.Labels {
+		if from.Labels[k] != v {
+			log.V(1).Info("reconciling CopyKubeflowGroup due to label change")
+			log.V(2).Info("difference in CopyKubeflowGroup labels", "wanted", from.Labels, "existing", to.Labels)
+			requireUpdate = true
+		}
+	}
+	if len(to.Labels) == 0 && len(from.Labels) != 0 {
+		log.V(1).Info("reconciling CopyKubeflowGroup due to label change")
+		log.V(2).Info("difference in CopyKubeflowGroup labels", "wanted", from.Labels, "existing", to.Labels)
+		requireUpdate = true
+	}
+	to.Labels = from.Labels
+
+	for k, v := range to.Annotations {
+		if from.Annotations[k] != v {
+			log.V(1).Info("reconciling CopyKubeflowGroup due to annotations change")
+			log.V(2).Info("difference in CopyKubeflowGroup annotations", "wanted", from.Annotations, "existing", to.Annotations)
+			requireUpdate = true
+		}
+	}
+	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
+		log.V(1).Info("reconciling CopyKubeflowGroup due to annotations change")
+		log.V(2).Info("difference in CopyKubeflowGroup annotations", "wanted", from.Annotations, "existing", to.Annotations)
+		requireUpdate = true
+	}
+	to.Annotations = from.Annotations
+
+	if !reflect.DeepEqual(to.Spec, from.Spec) {
+		log.V(1).Info("reconciling CopyKubeflowGroup due to spec change")
+		log.V(2).Info("difference in CopyKubeflowGroup spec", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
