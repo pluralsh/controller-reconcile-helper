@@ -552,6 +552,8 @@ github.com/pluralsh/kubeflow-controller v0.0.0-20211119170150-da85f07f50f4 h1:Oz
 github.com/pluralsh/kubeflow-controller v0.0.0-20211119170150-da85f07f50f4/go.mod h1:LbpIk6HqiXTJbZCZUngIACBEABe24PRr7EX5DQaVG6o=
 github.com/pluralsh/kubeflow-controller v0.0.0-20220524134435-b15904f2fa07 h1:nuJ7YBhs9IQ+cE5+wLlOjin59iWL8nChN7hSkgogbnI=
 github.com/pluralsh/kubeflow-controller v0.0.0-20220524134435-b15904f2fa07/go.mod h1:vAWzZj1fOvyYlSxrQDV84/89H+PLVHVdhCWGfqA4GJs=
+github.com/pluralsh/kubeflow-controller v0.0.0-20220610174913-30d9f912e64c h1:pKlftjGLd697E5Q/8MomyMZoyJiBj8pu33mcIZYyNWo=
+github.com/pluralsh/kubeflow-controller v0.0.0-20220610174913-30d9f912e64c/go.mod h1:Xw6jFf9/f2O+M/Faj+swx71aywDmy9MXoLT//m9rJRI=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
