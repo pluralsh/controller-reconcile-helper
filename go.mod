@@ -72,8 +72,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	istio.io/api v0.0.0-20220413180505-1574de06b7bd // indirect
 	istio.io/gogo-genproto v0.0.0-20211208193508-5ab4acc9eb1e // indirect
-	k8s.io/api v0.24.0
-	k8s.io/apimachinery v0.24.0
+	k8s.io/api v0.24.2
+	k8s.io/apimachinery v0.24.3
 	k8s.io/klog/v2 v2.60.1 // indirect
 	sigs.k8s.io/controller-runtime v0.12.1
 	sigs.k8s.io/hierarchical-namespaces v0.9.0
