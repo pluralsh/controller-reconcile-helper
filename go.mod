@@ -3,7 +3,7 @@ module github.com/pluralsh/controller-reconcile-helper
 go 1.18
 
 require (
-	github.com/aws-controllers-k8s/iam-controller v0.0.6
+	github.com/aws-controllers-k8s/iam-controller v0.0.21
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/pluralsh/kubricks-controller v0.0.0-20220615190526-d6183b0f5ce3
@@ -13,8 +13,8 @@ require (
 require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/aws-controllers-k8s/runtime v0.17.0 // indirect
-	github.com/aws/aws-sdk-go v1.42.0 // indirect
+	github.com/aws-controllers-k8s/runtime v0.20.1 // indirect
+	github.com/aws/aws-sdk-go v1.44.93 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
