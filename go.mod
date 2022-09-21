@@ -75,6 +75,6 @@ require (
 	k8s.io/apimachinery v0.24.0
 	k8s.io/klog/v2 v2.60.1 // indirect
 	sigs.k8s.io/controller-runtime v0.12.1
-	sigs.k8s.io/hierarchical-namespaces v0.9.0
+	sigs.k8s.io/hierarchical-namespaces v1.0.0
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
