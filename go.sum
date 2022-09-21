@@ -77,6 +77,8 @@ github.com/aws-controllers-k8s/runtime v0.17.0/go.mod h1:9c2CL3w0BlVkse+foHlP1Sk
 github.com/aws/aws-sdk-go v1.41.16/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
 github.com/aws/aws-sdk-go v1.42.0 h1:BMZws0t8NAhHFsfnT3B40IwD13jVDG5KerlRksctVIw=
 github.com/aws/aws-sdk-go v1.42.0/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
+github.com/aws/aws-sdk-go v1.42.18 h1:2f/cDNwQ3e+yHxtPn1si0to3GalbNHwkRm461IjwRiM=
+github.com/aws/aws-sdk-go v1.42.18/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
 github.com/benbjohnson/clock v1.0.3/go.mod h1:bGMdMPoPVvcYyt1gHDf4J2KE153Yf9BuiUKYMaxlTDM=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -497,6 +499,8 @@ github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.1/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/zalando/postgres-operator v1.7.1 h1:tDh7utqbrNoCNoQjy3seZiEoO+vT6SgP2+VlnSJ5mpg=
 github.com/zalando/postgres-operator v1.7.1/go.mod h1:hZTzOQBITJvv5nDHZpGIwyKqOghomxpZQRyWOfkPzKs=
+github.com/zalando/postgres-operator v1.8.2 h1:3FW3j2gXua1MSeE+NiSvB8cxM7k7fyoun46G1v++CCA=
+github.com/zalando/postgres-operator v1.8.2/go.mod h1:f7AXk8LO/tWFdW4myPJZCwMueGg6fI4RqTuOA0BefZE=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.6/go.mod h1:qXsaaIqmgQH0T+OPdb99Bf+PKfBBQVAdyD6TY9G8XM4=
 go.etcd.io/etcd/api/v3 v3.5.0/go.mod h1:cbVKeC6lCfl7j/8jBhAK6aIYO9XOjdptoxU/nLQcPvs=

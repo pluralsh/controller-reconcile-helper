@@ -13,7 +13,7 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/aws-controllers-k8s/runtime v0.17.0 // indirect
-	github.com/aws/aws-sdk-go v1.42.0 // indirect
+	github.com/aws/aws-sdk-go v1.42.18 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
@@ -32,7 +32,7 @@ require (
 	github.com/motomux/pretty v0.0.0-20161209205251-b2aad2c9a95d // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/afero v1.8.0 // indirect
-	github.com/zalando/postgres-operator v1.7.1
+	github.com/zalando/postgres-operator v1.8.2
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
 	k8s.io/apiextensions-apiserver v0.24.0 // indirect
 )
