@@ -6,7 +6,6 @@ require (
 	github.com/aws-controllers-k8s/iam-controller v0.0.6
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/pluralsh/kubricks-controller v0.0.0-20220615190526-d6183b0f5ce3
 	istio.io/client-go v1.13.3
 )
 

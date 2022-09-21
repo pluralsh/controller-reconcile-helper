@@ -18,8 +18,6 @@ import (
 	ackIAM "github.com/aws-controllers-k8s/iam-controller/apis/v1alpha1"
 	crossplaneAWSIdentityv1beta1 "github.com/crossplane/provider-aws/apis/iam/v1beta1"
 	kfPodDefault "github.com/kubeflow/kubeflow/components/admission-webhook/pkg/apis/settings/v1alpha1"
-	identityv1alpha1 "github.com/pluralsh/kubricks-controller/apis/identity/v1alpha1"
-	platformv1alpha1 "github.com/pluralsh/kubricks-controller/apis/platform/v1alpha1"
 	postgresv1 "github.com/zalando/postgres-operator/pkg/apis/acid.zalan.do/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -429,62 +427,6 @@ func NetworkPolicy(ctx context.Context, r client.Client, networkPolicy *networkv
 		log.Info("Updating NetworkPolicy", "namespace", networkPolicy.Namespace, "name", networkPolicy.Name)
 		if err := r.Update(ctx, foundNetworkPolicy); err != nil {
 			log.Error(err, "Unable to update NetworkPolicy")
-			return err
-		}
-	}
-
-	return nil
-}
-
-// KubricksEnvironment reconciles a Kubricks Environment object.
-func KubricksEnvironment(ctx context.Context, r client.Client, environment *platformv1alpha1.Environment, log logr.Logger) error {
-	foundEnvironment := &platformv1alpha1.Environment{}
-	justCreated := false
-	if err := r.Get(ctx, types.NamespacedName{Name: environment.Name, Namespace: environment.Namespace}, foundEnvironment); err != nil {
-		if apierrs.IsNotFound(err) {
-			log.Info("Creating KubricksEnvironment", "namespace", environment.Namespace, "name", environment.Name)
-			if err = r.Create(ctx, environment); err != nil {
-				log.Error(err, "Unable to create KubricksEnvironment")
-				return err
-			}
-			justCreated = true
-		} else {
-			log.Error(err, "Error getting KubricksEnvironment")
-			return err
-		}
-	}
-	if !justCreated && CopyKubricksEnvironment(environment, foundEnvironment, log) {
-		log.Info("Updating KubricksEnvironment", "namespace", environment.Namespace, "name", environment.Name)
-		if err := r.Update(ctx, foundEnvironment); err != nil {
-			log.Error(err, "Unable to update KubricksEnvironment")
-			return err
-		}
-	}
-
-	return nil
-}
-
-// KubricksGroup reconciles a Kubricks Group object.
-func KubricksGroup(ctx context.Context, r client.Client, group *identityv1alpha1.Group, log logr.Logger) error {
-	foundGroup := &identityv1alpha1.Group{}
-	justCreated := false
-	if err := r.Get(ctx, types.NamespacedName{Name: group.Name, Namespace: group.Namespace}, foundGroup); err != nil {
-		if apierrs.IsNotFound(err) {
-			log.Info("Creating KubricksGroup", "namespace", group.Namespace, "name", group.Name)
-			if err = r.Create(ctx, group); err != nil {
-				log.Error(err, "Unable to create KubricksGroup")
-				return err
-			}
-			justCreated = true
-		} else {
-			log.Error(err, "Error getting KubricksGroup")
-			return err
-		}
-	}
-	if !justCreated && CopyKubricksGroup(group, foundGroup, log) {
-		log.Info("Updating KubricksGroup", "namespace", group.Namespace, "name", group.Name)
-		if err := r.Update(ctx, foundGroup); err != nil {
-			log.Error(err, "Unable to update KubricksGroup")
 			return err
 		}
 	}
@@ -1803,88 +1745,6 @@ func CopyPostgresql(from, to *postgresv1.Postgresql, log logr.Logger) bool {
 	if !reflect.DeepEqual(to.Spec, from.Spec) {
 		log.V(1).Info("reconciling PostgreSQL Database due to spec change")
 		log.V(2).Info("difference in PostgreSQL Database spec", "wanted", from.Spec, "existing", to.Spec)
-		requireUpdate = true
-	}
-	to.Spec = from.Spec
-
-	return requireUpdate
-}
-
-// CopyKubricksGroup copies the owned fields from one Kubricks Group to another
-func CopyKubricksGroup(from, to *identityv1alpha1.Group, log logr.Logger) bool {
-	requireUpdate := false
-	for k, v := range to.Labels {
-		if from.Labels[k] != v {
-			log.V(1).Info("reconciling CopyKubricksGroup due to label change")
-			log.V(2).Info("difference in CopyKubricksGroup labels", "wanted", from.Labels, "existing", to.Labels)
-			requireUpdate = true
-		}
-	}
-	if len(to.Labels) == 0 && len(from.Labels) != 0 {
-		log.V(1).Info("reconciling CopyKubricksGroup due to label change")
-		log.V(2).Info("difference in CopyKubricksGroup labels", "wanted", from.Labels, "existing", to.Labels)
-		requireUpdate = true
-	}
-	to.Labels = from.Labels
-
-	for k, v := range to.Annotations {
-		if from.Annotations[k] != v {
-			log.V(1).Info("reconciling CopyKubricksGroup due to annotations change")
-			log.V(2).Info("difference in CopyKubricksGroup annotations", "wanted", from.Annotations, "existing", to.Annotations)
-			requireUpdate = true
-		}
-	}
-	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
-		log.V(1).Info("reconciling CopyKubricksGroup due to annotations change")
-		log.V(2).Info("difference in CopyKubricksGroup annotations", "wanted", from.Annotations, "existing", to.Annotations)
-		requireUpdate = true
-	}
-	to.Annotations = from.Annotations
-
-	if !reflect.DeepEqual(to.Spec, from.Spec) {
-		log.V(1).Info("reconciling CopyKubricksGroup due to spec change")
-		log.V(2).Info("difference in CopyKubricksGroup spec", "wanted", from.Spec, "existing", to.Spec)
-		requireUpdate = true
-	}
-	to.Spec = from.Spec
-
-	return requireUpdate
-}
-
-// CopyKubricksEnvironment copies the owned fields from one Kubricks Environment to another
-func CopyKubricksEnvironment(from, to *platformv1alpha1.Environment, log logr.Logger) bool {
-	requireUpdate := false
-	for k, v := range to.Labels {
-		if from.Labels[k] != v {
-			log.V(1).Info("reconciling KubricksEnvironment due to label change")
-			log.V(2).Info("difference in KubricksEnvironment labels", "wanted", from.Labels, "existing", to.Labels)
-			requireUpdate = true
-		}
-	}
-	if len(to.Labels) == 0 && len(from.Labels) != 0 {
-		log.V(1).Info("reconciling KubricksEnvironment due to label change")
-		log.V(2).Info("difference in KubricksEnvironment labels", "wanted", from.Labels, "existing", to.Labels)
-		requireUpdate = true
-	}
-	to.Labels = from.Labels
-
-	for k, v := range to.Annotations {
-		if from.Annotations[k] != v {
-			log.V(1).Info("reconciling KubricksEnvironment due to annotations change")
-			log.V(2).Info("difference in KubricksEnvironment annotations", "wanted", from.Annotations, "existing", to.Annotations)
-			requireUpdate = true
-		}
-	}
-	if len(to.Annotations) == 0 && len(from.Annotations) != 0 {
-		log.V(1).Info("reconciling KubricksEnvironment due to annotations change")
-		log.V(2).Info("difference in KubricksEnvironment annotations", "wanted", from.Annotations, "existing", to.Annotations)
-		requireUpdate = true
-	}
-	to.Annotations = from.Annotations
-
-	if !reflect.DeepEqual(to.Spec, from.Spec) {
-		log.V(1).Info("reconciling KubricksEnvironment due to spec change")
-		log.V(2).Info("difference in KubricksEnvironment spec", "wanted", from.Spec, "existing", to.Spec)
 		requireUpdate = true
 	}
 	to.Spec = from.Spec
