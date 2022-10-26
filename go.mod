@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/aws-controllers-k8s/iam-controller v0.0.6
 	github.com/cenkalti/backoff v2.2.1+incompatible
+	github.com/cenkalti/backoff/v4 v4.1.3
 	github.com/pkg/errors v0.9.1
 	istio.io/client-go v1.13.3
 )
