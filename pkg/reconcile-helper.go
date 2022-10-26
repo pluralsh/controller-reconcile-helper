@@ -1063,6 +1063,13 @@ func CopyDeploymentFields(from, to *appsv1.Deployment, log logr.Logger) bool {
 	}
 	to.Spec.Template.Spec.Tolerations = from.Spec.Template.Spec.Tolerations
 
+	if !reflect.DeepEqual(to.Spec.Template.Spec.TopologySpreadConstraints, from.Spec.Template.Spec.TopologySpreadConstraints) {
+		log.V(1).Info("reconciling Deployment due to topology spread constraints change")
+		log.V(2).Info("difference in Deployment topology spread constraints", "wanted", from.Spec.Template.Spec.TopologySpreadConstraints, "existing", to.Spec.Template.Spec.TopologySpreadConstraints)
+		requireUpdate = true
+	}
+	to.Spec.Template.Spec.TopologySpreadConstraints = from.Spec.Template.Spec.TopologySpreadConstraints
+
 	for i := range to.Spec.Template.Spec.Containers {
 
 		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].Name, from.Spec.Template.Spec.Containers[i].Name) {
