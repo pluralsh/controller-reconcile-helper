@@ -2,6 +2,7 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -1062,62 +1063,65 @@ func CopyDeploymentFields(from, to *appsv1.Deployment, log logr.Logger) bool {
 	}
 	to.Spec.Template.Spec.Tolerations = from.Spec.Template.Spec.Tolerations
 
-	if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[0].Name, from.Spec.Template.Spec.Containers[0].Name) {
-		log.V(1).Info("reconciling Deployment due to container[0] name change")
-		log.V(2).Info("difference in Deployment container[0] name", "wanted", from.Spec.Template.Spec.Containers[0].Name, "existing", to.Spec.Template.Spec.Containers[0].Name)
-		requireUpdate = true
-	}
-	to.Spec.Template.Spec.Containers[0].Name = from.Spec.Template.Spec.Containers[0].Name
+	for i := range to.Spec.Template.Spec.Containers {
 
-	if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[0].Image, from.Spec.Template.Spec.Containers[0].Image) {
-		log.V(1).Info("reconciling Deployment due to container[0] image change")
-		log.V(2).Info("difference in Deployment container[0] image", "wanted", from.Spec.Template.Spec.Containers[0].Image, "existing", to.Spec.Template.Spec.Containers[0].Image)
-		requireUpdate = true
-	}
-	to.Spec.Template.Spec.Containers[0].Image = from.Spec.Template.Spec.Containers[0].Image
+		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].Name, from.Spec.Template.Spec.Containers[i].Name) {
+			log.V(1).Info(fmt.Sprintf("reconciling Deployment due to container[%v] name change", i))
+			log.V(2).Info(fmt.Sprintf("difference in Deployment container [%v] name", i), "wanted", from.Spec.Template.Spec.Containers[i].Name, "existing", to.Spec.Template.Spec.Containers[i].Name)
+			requireUpdate = true
+		}
+		to.Spec.Template.Spec.Containers[i].Name = from.Spec.Template.Spec.Containers[i].Name
 
-	if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[0].WorkingDir, from.Spec.Template.Spec.Containers[0].WorkingDir) {
-		log.V(1).Info("reconciling Deployment due to container[0] working dir change")
-		log.V(2).Info("difference in Deployment container[0] working dir", "wanted", from.Spec.Template.Spec.Containers[0].WorkingDir, "existing", to.Spec.Template.Spec.Containers[0].WorkingDir)
-		requireUpdate = true
-	}
-	to.Spec.Template.Spec.Containers[0].WorkingDir = from.Spec.Template.Spec.Containers[0].WorkingDir
+		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].Image, from.Spec.Template.Spec.Containers[i].Image) {
+			log.V(1).Info(fmt.Sprintf("reconciling Deployment due to container[%v] image change", i))
+			log.V(2).Info(fmt.Sprintf("difference in Deployment container[%v] image", i), "wanted", from.Spec.Template.Spec.Containers[i].Image, "existing", to.Spec.Template.Spec.Containers[i].Image)
+			requireUpdate = true
+		}
+		to.Spec.Template.Spec.Containers[i].Image = from.Spec.Template.Spec.Containers[i].Image
 
-	if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[0].Ports, from.Spec.Template.Spec.Containers[0].Ports) {
-		log.V(1).Info("reconciling Deployment due to container[0] port change")
-		log.V(2).Info("difference in Deployment container[0] ports", "wanted", from.Spec.Template.Spec.Containers[0].Ports, "existing", to.Spec.Template.Spec.Containers[0].Ports)
+		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].WorkingDir, from.Spec.Template.Spec.Containers[i].WorkingDir) {
+			log.V(1).Info(fmt.Sprintf("reconciling Deployment due to container[%v] working dir change", i))
+			log.V(2).Info(fmt.Sprintf("difference in Deployment container[%v] working dir", i), "wanted", from.Spec.Template.Spec.Containers[i].WorkingDir, "existing", to.Spec.Template.Spec.Containers[i].WorkingDir)
+			requireUpdate = true
+		}
+		to.Spec.Template.Spec.Containers[i].WorkingDir = from.Spec.Template.Spec.Containers[i].WorkingDir
 
-		requireUpdate = true
-	}
-	to.Spec.Template.Spec.Containers[0].Ports = from.Spec.Template.Spec.Containers[0].Ports
+		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].Ports, from.Spec.Template.Spec.Containers[i].Ports) {
+			log.V(1).Info(fmt.Sprintf("reconciling Deployment due to container[%v] port change", i))
+			log.V(2).Info(fmt.Sprintf("difference in Deployment container[%v] ports", i), "wanted", from.Spec.Template.Spec.Containers[i].Ports, "existing", to.Spec.Template.Spec.Containers[i].Ports)
 
-	if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[0].Env, from.Spec.Template.Spec.Containers[0].Env) {
-		log.V(1).Info("reconciling Deployment due to container[0] env change")
-		log.V(2).Info("difference in Deployment container[0] env", "wanted", from.Spec.Template.Spec.Containers[0].Env, "existing", to.Spec.Template.Spec.Containers[0].Env)
-		requireUpdate = true
-	}
-	to.Spec.Template.Spec.Containers[0].Env = from.Spec.Template.Spec.Containers[0].Env
+			requireUpdate = true
+		}
+		to.Spec.Template.Spec.Containers[i].Ports = from.Spec.Template.Spec.Containers[i].Ports
 
-	if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[0].EnvFrom, from.Spec.Template.Spec.Containers[0].EnvFrom) {
-		log.V(1).Info("reconciling Deployment due to container[0] EnvFrom change")
-		log.V(2).Info("difference in Deployment container[0] EnvFrom", "wanted", from.Spec.Template.Spec.Containers[0].EnvFrom, "existing", to.Spec.Template.Spec.Containers[0].EnvFrom)
-		requireUpdate = true
-	}
-	to.Spec.Template.Spec.Containers[0].EnvFrom = from.Spec.Template.Spec.Containers[0].EnvFrom
+		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].Env, from.Spec.Template.Spec.Containers[i].Env) {
+			log.V(1).Info(fmt.Sprintf("reconciling Deployment due to container[%v] env change", i))
+			log.V(2).Info(fmt.Sprintf("difference in Deployment container[%v] env", i), "wanted", from.Spec.Template.Spec.Containers[i].Env, "existing", to.Spec.Template.Spec.Containers[i].Env)
+			requireUpdate = true
+		}
+		to.Spec.Template.Spec.Containers[i].Env = from.Spec.Template.Spec.Containers[i].Env
 
-	if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[0].Resources, from.Spec.Template.Spec.Containers[0].Resources) {
-		log.V(1).Info("reconciling Deployment due to container[0] resource change")
-		log.V(2).Info("difference in Deployment container[0] resources", "wanted", from.Spec.Template.Spec.Containers[0].Resources, "existing", to.Spec.Template.Spec.Containers[0].Resources)
-		requireUpdate = true
-	}
-	to.Spec.Template.Spec.Containers[0].Resources = from.Spec.Template.Spec.Containers[0].Resources
+		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].EnvFrom, from.Spec.Template.Spec.Containers[i].EnvFrom) {
+			log.V(1).Info(fmt.Sprintf("reconciling Deployment due to container[%v] EnvFrom change", i))
+			log.V(2).Info(fmt.Sprintf("difference in Deployment container[%v] EnvFrom", i), "wanted", from.Spec.Template.Spec.Containers[i].EnvFrom, "existing", to.Spec.Template.Spec.Containers[i].EnvFrom)
+			requireUpdate = true
+		}
+		to.Spec.Template.Spec.Containers[i].EnvFrom = from.Spec.Template.Spec.Containers[i].EnvFrom
 
-	if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[0].VolumeMounts, from.Spec.Template.Spec.Containers[0].VolumeMounts) {
-		log.V(1).Info("reconciling Deployment due to container[0] VolumeMounts change")
-		log.V(2).Info("difference in Deployment container[0] VolumeMounts", "wanted", from.Spec.Template.Spec.Containers[0].VolumeMounts, "existing", to.Spec.Template.Spec.Containers[0].VolumeMounts)
-		requireUpdate = true
+		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].Resources, from.Spec.Template.Spec.Containers[i].Resources) {
+			log.V(1).Info(fmt.Sprintf("reconciling Deployment due to container[%v] resource change", i))
+			log.V(2).Info(fmt.Sprintf("difference in Deployment container[%v] resources", i), "wanted", from.Spec.Template.Spec.Containers[i].Resources, "existing", to.Spec.Template.Spec.Containers[i].Resources)
+			requireUpdate = true
+		}
+		to.Spec.Template.Spec.Containers[i].Resources = from.Spec.Template.Spec.Containers[i].Resources
+
+		if !reflect.DeepEqual(to.Spec.Template.Spec.Containers[i].VolumeMounts, from.Spec.Template.Spec.Containers[i].VolumeMounts) {
+			log.V(1).Info(fmt.Sprintf("reconciling Deployment due to container[%v] VolumeMounts change", i))
+			log.V(2).Info(fmt.Sprintf("difference in Deployment container[%v] VolumeMounts", i), "wanted", from.Spec.Template.Spec.Containers[i].VolumeMounts, "existing", to.Spec.Template.Spec.Containers[i].VolumeMounts)
+			requireUpdate = true
+		}
+		to.Spec.Template.Spec.Containers[i].VolumeMounts = from.Spec.Template.Spec.Containers[i].VolumeMounts
 	}
-	to.Spec.Template.Spec.Containers[0].VolumeMounts = from.Spec.Template.Spec.Containers[0].VolumeMounts
 
 	return requireUpdate
 }
