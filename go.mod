@@ -6,7 +6,7 @@ require (
 	github.com/aws-controllers-k8s/iam-controller v0.0.6
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/pkg/errors v0.9.1
-	istio.io/client-go v1.13.3
+	istio.io/client-go v1.15.3
 )
 
 require (
@@ -42,12 +42,13 @@ require (
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
+	golang.org/x/sys v0.0.0-20220627191245-f75cf1eec38b // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	google.golang.org/genproto v0.0.0-20220628213854-d9e0b6570c03 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/client-go v0.24.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
@@ -65,14 +66,14 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/onsi/gomega v1.19.0
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
+	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	istio.io/api v0.0.0-20220413180505-1574de06b7bd // indirect
+	istio.io/api v0.0.0-20221013011440-bc935762d2b9 // indirect
 	istio.io/gogo-genproto v0.0.0-20211208193508-5ab4acc9eb1e // indirect
-	k8s.io/api v0.24.0
-	k8s.io/apimachinery v0.24.0
+	k8s.io/api v0.24.1
+	k8s.io/apimachinery v0.24.1
 	k8s.io/klog/v2 v2.60.1 // indirect
 	sigs.k8s.io/controller-runtime v0.12.1
 	sigs.k8s.io/hierarchical-namespaces v0.9.0
