@@ -55,7 +55,7 @@ require (
 )
 
 require (
-	github.com/crossplane/provider-aws v0.27.0
+	github.com/crossplane/provider-aws v0.33.0
 	github.com/go-logr/logr v1.2.0
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.5.7
