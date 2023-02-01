@@ -1,6 +1,6 @@
 module github.com/pluralsh/controller-reconcile-helper
 
-go 1.18
+go 1.20
 
 require (
 	github.com/aws-controllers-k8s/iam-controller v0.0.6
